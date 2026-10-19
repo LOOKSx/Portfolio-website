@@ -1,0 +1,208 @@
+/* ==========================================================================
+   ครูอ๋อน - เว็บไซต์สะสมผลงานวิชาการ (Teacher Academic E-Portfolio)
+   Theme: White & Soft Warm Brown / Dark Mode Toggle
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap');
+
+:root {
+  /* โทนสีขาว ครีม น้ำตาลอ่อน (Light Mode: Warm Cream & Soft Brown) */
+  --bg-page: #FAF8F5;
+  --bg-surface: #FFFFFF;
+  --bg-subtle: #F5EFEB;
+  --bg-accent-soft: #EFE6DD;
+  --border-color: #E6DBD1;
+  --border-subtle: #F0E8DF;
+  
+  --text-main: #2E251F;
+  --text-muted: #6E6156;
+  --text-subtle: #96867B;
+  
+  --accent-brown: #8D5B36;
+  --accent-hover: #754826;
+  --accent-light: #F7F1EB;
+  --accent-badge: #DFCEBE;
+  
+  --tag-student-bg: #E8F4FD;
+  --tag-student-text: #1B659D;
+  --tag-media-bg: #FEF3E7;
+  --tag-media-text: #B45309;
+  --tag-plan-bg: #EAF7EE;
+  --tag-plan-text: #1E7E44;
+  --tag-award-bg: #FDF2E9;
+  --tag-award-text: #B25E12;
+
+  --shadow-sm: 0 1px 3px rgba(92, 64, 51, 0.05);
+  --shadow-card: 0 4px 18px -2px rgba(92, 64, 51, 0.06), 0 2px 6px -1px rgba(92, 64, 51, 0.04);
+  --shadow-hover: 0 14px 30px -4px rgba(92, 64, 51, 0.12), 0 4px 10px -2px rgba(92, 64, 51, 0.06);
+}
+
+html.dark {
+  /* โหมดสีดำ อบอุ่น โทนเอสเปรสโซเข้ม (Dark Mode: Deep Warm Espresso & Amber) */
+  --bg-page: #13100E;
+  --bg-surface: #1E1815;
+  --bg-subtle: #29211C;
+  --bg-accent-soft: #352B24;
+  --border-color: #3D322B;
+  --border-subtle: #2E251F;
+  
+  --text-main: #F7F2EC;
+  --text-muted: #B3A499;
+  --text-subtle: #87786E;
+  
+  --accent-brown: #D49562;
+  --accent-hover: #E5AC7D;
+  --accent-light: #2A2019;
+  --accent-badge: #4A3A2F;
+
+  --tag-student-bg: #152A3D;
+  --tag-student-text: #70B8F8;
+  --tag-media-bg: #382414;
+  --tag-media-text: #FBBF24;
+  --tag-plan-bg: #143220;
+  --tag-plan-text: #68D391;
+  --tag-award-bg: #382110;
+  --tag-award-text: #F6AD55;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.45);
+  --shadow-hover: 0 14px 32px -4px rgba(0, 0, 0, 0.65);
+}
+
+/* Base setup */
+body {
+  font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--bg-page);
+  color: var(--text-main);
+  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6, .font-heading {
+  font-family: 'Prompt', sans-serif;
+}
+
+.font-num {
+  font-family: 'Plus Jakarta Sans', 'Prompt', sans-serif;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-page);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-brown);
+}
+
+/* Custom UI Cards */
+.bg-custom-surface {
+  background-color: var(--bg-surface);
+}
+.bg-custom-subtle {
+  background-color: var(--bg-subtle);
+}
+.bg-custom-accent-soft {
+  background-color: var(--bg-accent-soft);
+}
+.border-custom {
+  border-color: var(--border-color);
+}
+.text-custom-main {
+  color: var(--text-main);
+}
+.text-custom-muted {
+  color: var(--text-muted);
+}
+.text-custom-accent {
+  color: var(--accent-brown);
+}
+.bg-custom-accent {
+  background-color: var(--accent-brown);
+}
+.bg-custom-accent:hover {
+  background-color: var(--accent-hover);
+}
+
+/* Card hover animation */
+.portfolio-card {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+  box-shadow: var(--shadow-card);
+}
+.portfolio-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+  border-color: var(--accent-brown);
+}
+
+/* Interactive tag badges */
+.badge-student {
+  background-color: var(--tag-student-bg);
+  color: var(--tag-student-text);
+}
+.badge-media {
+  background-color: var(--tag-media-bg);
+  color: var(--tag-media-text);
+}
+.badge-plan {
+  background-color: var(--tag-plan-bg);
+  color: var(--tag-plan-text);
+}
+.badge-award {
+  background-color: var(--tag-award-bg);
+  color: var(--tag-award-text);
+}
+
+/* Edit Mode styling indicators */
+.is-editing [data-editable] {
+  outline: 2px dashed rgba(141, 91, 54, 0.5);
+  outline-offset: 4px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+.is-editing [data-editable]:hover {
+  outline: 2px solid var(--accent-brown);
+  background-color: rgba(141, 91, 54, 0.08);
+}
+.edit-badge-pill {
+  animation: pulse-soft 2s infinite;
+}
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.02); }
+}
+
+/* Modal Blur & Transitions */
+.modal-backdrop {
+  background-color: rgba(19, 16, 14, 0.7);
+  backdrop-filter: blur(6px);
+}
+
+/* Print Optimization for Portfolios (ว.PA / แฟ้มสะสมผลงานฉบับพิมพ์) */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #111111 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .portfolio-card {
+    break-inside: avoid;
+    box-shadow: none !important;
+    border: 1px solid #cccccc !important;
+    transform: none !important;
+  }
+  .modal-backdrop, #editModal, #workModal {
+    display: none !important;
+  }
+}

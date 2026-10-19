@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="th" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ครูอ๋อน | เว็บไซต์สะสมผลงานวิชาการและรายวิชา (Academic E-Portfolio)</title>
+  <meta name="description" content="เว็บไซต์สะสมผลงานและรวบรวมผลงานประจำรายวิชา นวัตกรรมการสอน และผลงานนักเรียน โดย ครูอ๋อน">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Sarabun', 'sans-serif'],
+            heading: ['Prompt', 'sans-serif'],
+            num: ['Plus Jakarta Sans', 'Prompt', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Custom Styles (Warm Cream / Soft Brown & Dark Mode) -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="min-h-screen flex flex-col selection:bg-amber-200 selection:text-amber-900 dark:selection:bg-amber-900 dark:selection:text-amber-100">
+
+  <!-- =========================================================================
+       1. Top Notification Banner (เมื่ออยู่ในโหมดแก้ไข)
+       ========================================================================= -->
+  <div id="editModeBanner" class="hidden no-print bg-amber-500/10 border-b border-amber-500/20 py-2.5 px-4 text-xs sm:text-sm text-amber-900 dark:text-amber-200 sticky top-0 z-50 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center space-x-2 font-medium">
+        <span class="inline-block w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping"></span>
+        <i data-lucide="wrench" class="w-4 h-4 text-amber-600 dark:text-amber-400"></i>
+        <span><strong>โหมดแก้ไขข้อมูลเปิดอยู่:</strong> คุณสามารถแก้ไข/เพิ่ม/ลบ ข้อมูลรายวิชา ผลงาน และประวัติได้ทันที</span>
+      </div>
+      <div class="flex items-center space-x-2">
+        <button onclick="exportDataAsJSON()" class="px-2.5 py-1 rounded bg-amber-600 text-white text-xs hover:bg-amber-700 font-medium transition-colors flex items-center gap-1">
+          <i data-lucide="download" class="w-3.5 h-3.5"></i> สำรองไฟล์ JSON
+        </button>
+        <button onclick="document.getElementById('importJsonInput').click()" class="px-2.5 py-1 rounded bg-white dark:bg-stone-800 border border-amber-300 dark:border-amber-700 text-xs font-medium hover:bg-amber-50 transition-colors flex items-center gap-1">
+          <i data-lucide="upload" class="w-3.5 h-3.5"></i> นำเข้า JSON
+        </button>
+        <button onclick="resetToDefaultData()" class="px-2.5 py-1 rounded bg-stone-200 dark:bg-stone-700 text-xs text-stone-700 dark:text-stone-300 hover:bg-stone-300 transition-colors">
+          คืนค่าเริ่มต้น
+        </button>
+        <button onclick="toggleEditMode()" class="px-2.5 py-1 rounded bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 text-xs font-medium hover:opacity-90 transition-opacity">
+          ปิดโหมดแก้ไข
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden File Input for JSON import -->
+  <input type="file" id="importJsonInput" accept=".json" class="hidden" onchange="importDataFromJSON(event)">
+
+  <!-- =========================================================================
+       2. Main Navigation Header
+       ========================================================================= -->
+  <header class="border-b border-custom bg-custom-surface/90 backdrop-blur-md sticky top-0 z-40 transition-colors">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      
+      <!-- Brand Logo -->
+      <a href="#" class="flex items-center space-x-3 group">
+        <div class="w-11 h-11 rounded-2xl bg-custom-accent text-white flex items-center justify-center shadow-md transition-transform duration-300 group-hover:scale-105">
+          <i data-lucide="graduation-cap" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <span class="font-heading font-bold text-lg sm:text-xl text-custom-main tracking-tight block leading-tight">
+            ครูอ๋อน E-Portfolio
+          </span>
+          <span class="text-xs text-custom-muted block">
+            แฟ้มสะสมผลงานวิชาการและรายวิชา
+          </span>
+        </div>
+      </a>
+
+      <!-- Desktop Nav Links -->
+      <nav class="hidden md:flex items-center space-x-6 text-sm font-medium text-custom-muted">
+        <a href="#teacher-profile" class="hover:text-custom-accent transition-colors flex items-center gap-1.5 py-2">
+          <i data-lucide="user-check" class="w-4 h-4"></i> ประวัติวิชาการ
+        </a>
+        <a href="#courses-section" class="hover:text-custom-accent transition-colors flex items-center gap-1.5 py-2">
+          <i data-lucide="book-marked" class="w-4 h-4"></i> รายวิชาที่สอน
+        </a>
+        <a href="#portfolio-section" class="hover:text-custom-accent transition-colors flex items-center gap-1.5 py-2">
+          <i data-lucide="folder-kanban" class="w-4 h-4"></i> ผลงานรายวิชา
+        </a>
+        <a href="#downloads-section" class="hover:text-custom-accent transition-colors flex items-center gap-1.5 py-2">
+          <i data-lucide="file-down" class="w-4 h-4"></i> คลังเอกสาร
+        </a>
+        <a href="#contact-section" class="hover:text-custom-accent transition-colors flex items-center gap-1.5 py-2">
+          <i data-lucide="send" class="w-4 h-4"></i> ติดต่อ
+        </a>
+      </nav>
+
+      <!-- Action Buttons (Theme Toggle, Edit Mode, Print) -->
+      <div class="flex items-center space-x-2 sm:space-x-3 no-print">
+        
+        <!-- Toggle Edit Mode Button -->
+        <button id="toggleEditModeBtn" onclick="toggleEditMode()" class="px-3 py-2 rounded-xl border border-custom bg-custom-subtle text-custom-main text-xs sm:text-sm font-medium hover:border-custom-accent transition-all flex items-center gap-1.5" title="คลิกเพื่อเข้าสู่โหมดแก้ไขข้อมูล">
+          <i data-lucide="edit-3" class="w-4 h-4 text-custom-accent"></i>
+          <span class="hidden sm:inline">โหมดแก้ไขข้อมูล</span>
+        </button>
+
+        <!-- Theme Toggle Button (Light Soft Brown / Dark Mode) -->
+        <button onclick="toggleTheme()" class="p-2 sm:px-3 sm:py-2 rounded-xl border border-custom bg-custom-subtle text-custom-main text-xs sm:text-sm font-medium hover:border-custom-accent transition-all flex items-center gap-1.5" title="สลับโหมดสีสว่าง/โหมดสีดำ">
+          <i id="themeSunIcon" data-lucide="sun" class="w-4 h-4 text-amber-500 hidden"></i>
+          <i id="themeMoonIcon" data-lucide="moon" class="w-4 h-4 text-custom-accent"></i>
+          <span id="themeLabel" class="hidden lg:inline text-xs">โหมดสีดำ</span>
+        </button>
+
+        <!-- Print Portfolio Button -->
+        <button onclick="window.print()" class="p-2 sm:px-3 sm:py-2 rounded-xl border border-custom bg-custom-subtle text-custom-main text-xs sm:text-sm font-medium hover:border-custom-accent transition-all flex items-center gap-1.5" title="พิมพ์หรือบันทึกเป็น PDF">
+          <i data-lucide="printer" class="w-4 h-4 text-custom-muted"></i>
+          <span class="hidden xl:inline text-xs">พิมพ์ / PDF</span>
+        </button>
+
+      </div>
+
+    </div>
+  </header>
+
+  <!-- =========================================================================
+       3. Main Content Wrapper
+       ========================================================================= -->
+  <main class="flex-grow">
+
+    <!-- -----------------------------------------------------------------------
+         SECTION 1: หน้าโชว์อาจารย์เฉพาะวิชาการ (Teacher Academic Profile & Hero)
+         ----------------------------------------------------------------------- -->
+    <section id="teacher-profile" class="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 border-b border-custom transition-colors relative overflow-hidden">
+      <!-- Decorative background glow -->
+      <div class="absolute -top-32 -left-32 w-96 h-96 bg-amber-500/5 dark:bg-amber-400/5 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-stone-500/5 dark:bg-stone-400/5 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div class="max-w-7xl mx-auto relative z-10">
+        
+        <!-- Top Action Bar for Profile (Visible in Edit Mode) -->
+        <div class="flex justify-end mb-4">
+          <button id="editProfileBtn" onclick="openTeacherModal()" class="hidden px-4 py-2 rounded-xl bg-custom-accent text-white text-xs sm:text-sm font-medium hover:opacity-90 shadow-sm transition-all flex items-center gap-2">
+            <i data-lucide="user-cog" class="w-4 h-4"></i> แก้ไขข้อมูลประวัติอาจารย์
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+          
+          <!-- Column 1: Teacher Academic Photo & Identity (4 Cols) -->
+          <div class="lg:col-span-4 flex flex-col items-center text-center lg:text-left lg:items-start">
+            <div class="relative group">
+              <!-- Avatar Frame -->
+              <div class="w-48 h-48 sm:w-56 sm:h-56 rounded-3xl overflow-hidden p-1.5 bg-gradient-to-tr from-amber-700/30 to-amber-200/50 dark:from-amber-600/30 dark:to-stone-700/50 shadow-card">
+                <img id="teacherAvatar" 
+                     src="https://images.unsplash.com/photo-1544717305-2782549b5136?q=80&w=600&auto=format&fit=crop" 
+                     alt="ครูอ๋อน" 
+                     class="w-full h-full object-cover rounded-[22px] transition-transform duration-500 group-hover:scale-105">
+              </div>
+
+              <!-- Academic Badge Pin -->
+              <div class="absolute -bottom-3 right-2 sm:right-4 px-3 py-1 rounded-full bg-custom-surface border border-custom shadow-md flex items-center gap-1.5 text-xs font-semibold text-custom-accent">
+                <i data-lucide="award" class="w-4 h-4 text-amber-500"></i>
+                <span id="teacherPositionTag">ครูชำนาญการ</span>
+              </div>
+            </div>
+
+            <div class="mt-6 w-full">
+              <span class="inline-block px-3 py-1 rounded-full text-xs font-medium bg-custom-accent-soft text-custom-accent mb-2">
+                อาจารย์ผู้สอนประจำกลุ่มสาระการเรียนรู้
+              </span>
+              <h1 id="teacherName" class="text-2xl sm:text-3xl font-heading font-bold text-custom-main tracking-tight">
+                ครูอ๋อน
+              </h1>
+              <p id="teacherFullName" class="text-sm font-medium text-custom-muted mt-1">
+                นาย/นางสาว สุภาพร รัตนวิจิตร
+              </p>
+              <p id="teacherPosition" class="text-xs sm:text-sm text-custom-accent font-semibold mt-1">
+                ครู วิทยฐานะครูชำนาญการ
+              </p>
+              <p id="teacherSchool" class="text-xs text-custom-muted mt-0.5">
+                โรงเรียนตัวอย่างวิทยาการ สังกัด สพฐ.
+              </p>
+              <p id="teacherDepartment" class="text-xs text-custom-muted mt-0.5 font-medium">
+                กลุ่มสาระการเรียนรู้วิทยาศาสตร์และเทคโนโลยี
+              </p>
+            </div>
+          </div>
+
+          <!-- Column 2: Academic Focus, Bio & Key Teaching Stats (8 Cols) -->
+          <div class="lg:col-span-8 flex flex-col justify-center">
+            
+            <!-- Teaching Philosophy Callout -->
+            <div class="p-6 rounded-2xl bg-custom-subtle border border-custom mb-6 relative">
+              <i data-lucide="quote" class="w-8 h-8 text-custom-accent/20 absolute top-4 right-4"></i>
+              <div class="text-xs font-bold uppercase tracking-wider text-custom-accent mb-2 flex items-center gap-1.5">
+                <i data-lucide="sparkles" class="w-4 h-4"></i> ปรัชญาและแนวคิดการจัดการเรียนรู้ (Teaching Philosophy)
+              </div>
+              <p id="teacherPhilosophy" class="text-sm sm:text-base font-medium italic text-custom-main leading-relaxed">
+                “การศึกษาไม่ใช่การเติมน้ำให้เต็มแก้ว แต่เป็นการจุดประกายไฟแห่งการเรียนรู้ที่ไม่มีวันดับ”
+              </p>
+            </div>
+
+            <!-- Academic Bio Description -->
+            <p id="teacherBio" class="text-sm sm:text-base text-custom-muted leading-relaxed mb-6">
+              มุ่งเน้นการจัดการเรียนรู้เชิงรุก (Active Learning) ผสมผสานเทคโนโลยีดิจิทัลและสะเต็มศึกษา (STEM Education) เพื่อพัฒนาทักษะการคิดวิเคราะห์ การแก้ปัญหา และความคิดสร้างสรรค์ของผู้เรียนในศตวรรษที่ 21 อย่างมีความสุขและมีประสิทธิภาพ
+            </p>
+
+            <!-- 4 Key Academic Stats -->
+            <div id="teacherStatsContainer" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+              <!-- Rendered via JS -->
+            </div>
+
+            <!-- Academic Education & Recognitions Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- Education Background -->
+              <div class="p-5 rounded-2xl bg-custom-surface border border-custom">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-custom-accent mb-3 flex items-center gap-1.5">
+                  <i data-lucide="book-open" class="w-4 h-4"></i> วุฒิการศึกษา (Academic Background)
+                </h4>
+                <ul id="teacherEducationContainer" class="space-y-3">
+                  <!-- Rendered via JS -->
+                </ul>
+              </div>
+
+              <!-- Academic Honors / PA -->
+              <div class="p-5 rounded-2xl bg-custom-surface border border-custom">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-custom-accent mb-3 flex items-center gap-1.5">
+                  <i data-lucide="trophy" class="w-4 h-4"></i> ผลงานและเกียรติประวัติทางวิชาการ
+                </h4>
+                <ul id="teacherAchievementsContainer" class="space-y-3">
+                  <!-- Rendered via JS -->
+                </ul>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- -----------------------------------------------------------------------
+         SECTION 2: รายวิชาการเรียนการสอน (Academic Courses)
+         ----------------------------------------------------------------------- -->
+    <section id="courses-section" class="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 border-b border-custom bg-custom-subtle/50 transition-colors">
+      <div class="max-w-7xl mx-auto">
+        
+        <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+          <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-custom-accent flex items-center gap-1 mb-1">
+              <i data-lucide="bookmark" class="w-3.5 h-3.5"></i> Curriculum & Teaching Load
+            </span>
+            <h2 class="text-2xl sm:text-3xl font-heading font-bold text-custom-main">
+              รายวิชาที่รับผิดชอบการสอน
+            </h2>
+            <p class="text-xs sm:text-sm text-custom-muted mt-1">
+              โครงสร้างหลักสูตรและรายวิชาที่จัดการเรียนรู้ในภาคเรียนปัจจุบันและที่ผ่านมา
+            </p>
+          </div>
+
+          <!-- Add Course Button (In Edit Mode) -->
+          <button id="addCourseBtn" onclick="openCourseModal()" class="hidden px-4 py-2.5 rounded-xl bg-custom-accent text-white text-xs sm:text-sm font-semibold hover:opacity-90 shadow-sm transition-all flex items-center gap-2 self-start md:self-auto">
+            <i data-lucide="plus-circle" class="w-4 h-4"></i> เพิ่มรายวิชาใหม่
+          </button>
+        </div>
+
+        <!-- Courses Cards Grid -->
+        <div id="coursesListContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <!-- Rendered via JS -->
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- -----------------------------------------------------------------------
+         SECTION 3: คลังเก็บข้อมูลผลงานของรายวิชา (Course Portfolio Hub)
+         ----------------------------------------------------------------------- -->
+    <section id="portfolio-section" class="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 transition-colors">
+      <div class="max-w-7xl mx-auto">
+        
+        <!-- Section Header -->
+        <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+          <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-custom-accent flex items-center gap-1 mb-1">
+              <i data-lucide="layers" class="w-3.5 h-3.5"></i> Course Portfolio Repository
+            </span>
+            <h2 class="text-2xl sm:text-3xl font-heading font-bold text-custom-main">
+              คลังผลงานประจำรายวิชา
+            </h2>
+            <p class="text-xs sm:text-sm text-custom-muted mt-1">
+              รวบรวมผลงานนักเรียน สื่อนวัตกรรมการสอน แผนการจัดการเรียนรู้ และรางวัลผลสัมฤทธิ์
+            </p>
+          </div>
+
+          <!-- Add Work Button (In Edit Mode) -->
+          <button id="addWorkBtn" onclick="openWorkModal()" class="hidden px-4 py-2.5 rounded-xl bg-custom-accent text-white text-xs sm:text-sm font-semibold hover:opacity-90 shadow-sm transition-all flex items-center gap-2 self-start md:self-auto">
+            <i data-lucide="plus-circle" class="w-4 h-4"></i> เพิ่มผลงานใหม่ในวิชา
+          </button>
+        </div>
+
+        <!-- Filter Controls Container -->
+        <div class="bg-custom-surface border border-custom rounded-2xl p-4 sm:p-5 mb-8 shadow-sm space-y-4">
+          
+          <!-- 1. Course Filter Tabs -->
+          <div>
+            <div class="text-xs font-semibold text-custom-muted mb-2 flex items-center gap-1.5">
+              <i data-lucide="filter" class="w-3.5 h-3.5 text-custom-accent"></i> เลือกรหัสรายวิชา:
+            </div>
+            <div id="courseFilterTabs" class="flex flex-wrap gap-2">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- 2. Sub-Category Pills & Search Bar -->
+          <div class="pt-3 border-t border-custom flex flex-col md:flex-row items-center justify-between gap-4">
+            
+            <!-- Category Pills -->
+            <div class="flex flex-wrap gap-1.5 w-full md:w-auto">
+              <button onclick="filterByCategory('all')" data-category="all" class="category-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-custom-accent text-white transition-all">
+                ทุกหมวดหมู่
+              </button>
+              <button onclick="filterByCategory('student')" data-category="student" class="category-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-custom-surface text-custom-muted border border-custom hover:border-custom-accent transition-all flex items-center gap-1">
+                🌟 ผลงานนักเรียน
+              </button>
+              <button onclick="filterByCategory('media')" data-category="media" class="category-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-custom-surface text-custom-muted border border-custom hover:border-custom-accent transition-all flex items-center gap-1">
+                💡 สื่อนวัตกรรมการสอน
+              </button>
+              <button onclick="filterByCategory('plan')" data-category="plan" class="category-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-custom-surface text-custom-muted border border-custom hover:border-custom-accent transition-all flex items-center gap-1">
+                📑 แผนการสอน & ใบงาน
+              </button>
+              <button onclick="filterByCategory('award')" data-category="award" class="category-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-custom-surface text-custom-muted border border-custom hover:border-custom-accent transition-all flex items-center gap-1">
+                🏆 รางวัล & ผลสัมฤทธิ์
+              </button>
+            </div>
+
+            <!-- Search Input & Count Badge -->
+            <div class="flex items-center space-x-2 w-full md:w-72">
+              <div class="relative flex-1">
+                <i data-lucide="search" class="w-4 h-4 text-custom-muted absolute left-3 top-1/2 -translate-y-1/2"></i>
+                <input type="text" 
+                       id="searchInput" 
+                       oninput="handleSearch(this)" 
+                       placeholder="ค้นหาชื่อผลงาน, แท็ก..." 
+                       class="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-custom-subtle border border-custom text-custom-main placeholder-custom-muted focus:outline-none focus:border-custom-accent transition-colors">
+              </div>
+              <span id="worksCountBadge" class="text-xs px-2.5 py-1.5 rounded-xl bg-custom-subtle text-custom-muted font-num font-semibold whitespace-nowrap">
+                0 ชิ้นงาน
+              </span>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- Works Grid -->
+        <div id="worksGridContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Rendered via JS -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="worksEmptyState" class="hidden py-16 text-center">
+          <div class="w-16 h-16 rounded-3xl bg-custom-subtle text-custom-muted flex items-center justify-center mx-auto mb-4">
+            <i data-lucide="inbox" class="w-8 h-8"></i>
+          </div>
+          <h4 class="text-base font-bold text-custom-main">ไม่พบผลงานที่ตรงกับเงื่อนไขการค้นหา</h4>
+          <p class="text-xs text-custom-muted mt-1">ลองเปลี่ยนการเลือกรหัสวิชา หรือคำค้นหาใหม่อีกครั้ง</p>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- -----------------------------------------------------------------------
+         SECTION 4: คลังเอกสารและดาวน์โหลด (Academic Downloads)
+         ----------------------------------------------------------------------- -->
+    <section id="downloads-section" class="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 border-t border-custom bg-custom-subtle/40 transition-colors">
+      <div class="max-w-7xl mx-auto">
+        
+        <div class="mb-8">
+          <span class="text-xs font-bold uppercase tracking-wider text-custom-accent flex items-center gap-1 mb-1">
+            <i data-lucide="download-cloud" class="w-3.5 h-3.5"></i> Academic Resources & Files
+          </span>
+          <h2 class="text-2xl sm:text-3xl font-heading font-bold text-custom-main">
+            คลังเอกสารและประมวลรายวิชา
+          </h2>
+          <p class="text-xs sm:text-sm text-custom-muted mt-1">
+            เอกสารประมวลรายวิชา (Syllabus), รายงาน SAR, และแบบประเมินสำหรับงานวิชาการ
+          </p>
+        </div>
+
+        <div id="downloadsListContainer" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Rendered via JS -->
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- -----------------------------------------------------------------------
+         SECTION 5: ข้อมูลการติดต่อ (Contact & Affiliation)
+         ----------------------------------------------------------------------- -->
+    <section id="contact-section" class="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 border-t border-custom transition-colors">
+      <div class="max-w-7xl mx-auto">
+        <div class="bg-custom-surface border border-custom rounded-3xl p-6 sm:p-10 shadow-card">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            
+            <div class="lg:col-span-7">
+              <span class="text-xs font-bold uppercase tracking-wider text-custom-accent flex items-center gap-1 mb-2">
+                <i data-lucide="mail" class="w-3.5 h-3.5"></i> Academic Inquiries
+              </span>
+              <h3 class="text-xl sm:text-2xl font-heading font-bold text-custom-main">
+                ติดต่อสอบถามและแลกเปลี่ยนเรียนรู้ทางวิชาการ
+              </h3>
+              <p class="text-xs sm:text-sm text-custom-muted mt-2 leading-relaxed">
+                ยินดีร่วมมือในการจัดกิจกรรมวิชาการ การพัฒนาสื่อการเรียนรู้สะเต็มศึกษา หรือแลกเปลี่ยนประสบการณ์การจัดทำข้อตกลงพัฒนางาน (ว.PA)
+              </p>
+            </div>
+
+            <div class="lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3 text-xs">
+              <div class="p-3.5 rounded-xl bg-custom-subtle border border-custom flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-lg bg-custom-accent-soft text-custom-accent flex items-center justify-center">
+                  <i data-lucide="mail" class="w-4 h-4"></i>
+                </div>
+                <div>
+                  <span class="text-custom-muted block text-[11px]">อีเมลติดต่อ:</span>
+                  <span id="teacherEmail" class="font-semibold text-custom-main font-num">kru.aon@example.school.th</span>
+                </div>
+              </div>
+
+              <div class="p-3.5 rounded-xl bg-custom-subtle border border-custom flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-lg bg-custom-accent-soft text-custom-accent flex items-center justify-center">
+                  <i data-lucide="phone" class="w-4 h-4"></i>
+                </div>
+                <div>
+                  <span class="text-custom-muted block text-[11px]">เบอร์โทรศัพท์:</span>
+                  <span id="teacherPhone" class="font-semibold text-custom-main font-num">08x-xxx-xxxx</span>
+                </div>
+              </div>
+
+              <div class="p-3.5 rounded-xl bg-custom-subtle border border-custom flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-lg bg-custom-accent-soft text-custom-accent flex items-center justify-center">
+                  <i data-lucide="message-circle" class="w-4 h-4"></i>
+                </div>
+                <div>
+                  <span class="text-custom-muted block text-[11px]">Line ID:</span>
+                  <span id="teacherLine" class="font-semibold text-custom-main">@kru_aon</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+
+  <!-- =========================================================================
+       4. Footer
+       ========================================================================= -->
+  <footer class="border-t border-custom bg-custom-surface py-8 px-4 text-center text-xs text-custom-muted transition-colors">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center space-x-2">
+        <i data-lucide="graduation-cap" class="w-4 h-4 text-custom-accent"></i>
+        <span>© 2026 เว็บไซต์สะสมผลงานวิชาการ ครูอ๋อน (Academic E-Portfolio)</span>
+      </div>
+      <div class="text-[11px] text-custom-muted">
+        ระบบพัฒนาด้วย HTML5, Tailwind CSS & JavaScript รองรับการแก้ไขและพิมพ์ประเมิน ว.PA
+      </div>
+    </div>
+  </footer>
+
+
+  <!-- =========================================================================
+       5. MODAL 1: ดูรายละเอียดผลงาน (Work Detail Lightbox Modal)
+       ========================================================================= -->
+  <div id="workDetailModal" class="fixed inset-0 z-50 hidden items-center justify-center modal-backdrop p-4 overflow-y-auto">
+    <div class="bg-custom-surface border border-custom rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl relative my-8 animate-in fade-in duration-200">
+      
+      <!-- Close button -->
+      <button onclick="closeWorkDetailModal()" class="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-colors">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <!-- Modal Image -->
+      <div class="h-64 sm:h-80 w-full overflow-hidden bg-stone-900 relative">
+        <img id="detailModalImage" src="" alt="ภาพผลงาน" class="w-full h-full object-cover">
+        <div class="absolute bottom-3 left-4 flex gap-2">
+          <span id="detailModalCourse" class="px-2.5 py-1 rounded text-xs font-bold font-num bg-custom-accent text-white shadow"></span>
+          <span id="detailModalCategory" class="px-2.5 py-1 rounded text-xs font-semibold bg-white/90 text-stone-900 shadow"></span>
+        </div>
+      </div>
+
+      <!-- Modal Content Body -->
+      <div class="p-6 sm:p-8">
+        <div class="flex items-center justify-between text-xs text-custom-muted mb-2">
+          <span id="detailModalAuthor" class="font-medium text-custom-main"></span>
+          <span id="detailModalDate" class="font-num"></span>
+        </div>
+
+        <h3 id="detailModalTitle" class="text-xl sm:text-2xl font-heading font-bold text-custom-main mb-4 leading-snug"></h3>
+        
+        <p id="detailModalDescription" class="text-sm text-custom-muted leading-relaxed mb-6 whitespace-pre-line"></p>
+
+        <!-- Tags -->
+        <div id="detailModalTags" class="flex flex-wrap gap-1.5 mb-6"></div>
+
+        <!-- Action / Download link -->
+        <div class="pt-4 border-t border-custom flex items-center justify-end space-x-3">
+          <button onclick="closeWorkDetailModal()" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-medium border border-custom hover:bg-custom-subtle text-custom-muted transition-colors">
+            ปิดหน้าต่าง
+          </button>
+          <a id="detailModalDownloadBtn" href="#" target="_blank" class="px-5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-custom-accent text-white hover:opacity-90 transition-opacity flex items-center gap-1.5">
+            <i data-lucide="external-link" class="w-4 h-4"></i> ดูเอกสาร / สื่อการสอน
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- =========================================================================
+       6. MODAL 2: เพิ่ม/แก้ไขผลงานรายวิชา (Work Edit Modal)
+       ========================================================================= -->
+  <div id="workEditModal" class="fixed inset-0 z-50 hidden items-center justify-center modal-backdrop p-4 overflow-y-auto">
+    <div class="bg-custom-surface border border-custom rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative my-8">
+      
+      <div class="flex items-center justify-between pb-4 border-b border-custom mb-6">
+        <h3 id="workModalTitle" class="text-lg font-heading font-bold text-custom-main flex items-center gap-2">
+          <i data-lucide="edit-3" class="w-5 h-5 text-custom-accent"></i> เพิ่ม/แก้ไขผลงานในรายวิชา
+        </h3>
+        <button onclick="closeWorkModal()" class="text-custom-muted hover:text-custom-main">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form onsubmit="saveWork(event)" class="space-y-4 text-xs sm:text-sm">
+        
+        <!-- Course Selection -->
+        <div>
+          <label class="block font-medium text-custom-main mb-1">เลือกรหัสรายวิชา <span class="text-red-500">*</span></label>
+          <select id="formWorkCourse" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main focus:outline-none focus:border-custom-accent"></select>
+        </div>
+
+        <!-- Title -->
+        <div>
+          <label class="block font-medium text-custom-main mb-1">ชื่อผลงาน / ชิ้นงาน <span class="text-red-500">*</span></label>
+          <input type="text" id="formWorkTitle" required placeholder="เช่น เว็บไซต์ท่องเที่ยวชุมชน..." class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main focus:outline-none focus:border-custom-accent">
+        </div>
+
+        <!-- Category & Date Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-custom-main mb-1">หมวดหมู่ผลงาน</label>
+            <select id="formWorkCategory" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main focus:outline-none focus:border-custom-accent">
+              <option value="student">🌟 ผลงานนักเรียน</option>
+              <option value="media">💡 สื่อนวัตกรรมการสอน</option>
+              <option value="plan">📑 แผนการสอน & ใบงาน</option>
+              <option value="award">🏆 รางวัล & ผลสัมฤทธิ์</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-medium text-custom-main mb-1">วันเดือนปี / ภาคเรียน</label>
+            <input type="text" id="formWorkDate" placeholder="เช่น กุมภาพันธ์ 2567" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main focus:outline-none focus:border-custom-accent">
+          </div>
+        </div>
+
+        <!-- Author / Student Name -->
+        <div>
+          <label class="block font-medium text-custom-main mb-1">ผู้จัดทำ / นักเรียน / กลุ่มเจ้าของผลงาน</label>
+          <input type="text" id="formWorkAuthor" placeholder="เช่น ด.ช.วีรภัทร ม.2/1 หรือ ครูอ๋อน" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main focus:outline-none focus:border-custom-accent">
+        </div>
+
+        <!-- Image URL & File Upload -->
+        <div>
+          <label class="block font-medium text-custom-main mb-1">ภาพประกอบผลงาน (ใส่ URL หรือเลือกไฟล์จากคอมพิวเตอร์)</label>
+          <div class="flex gap-2">
+            <input type="text" id="formWorkImage" placeholder="https://... หรือเลือกไฟล์ด้านขวา" class="flex-1 px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main focus:outline-none focus:border-custom-accent text-xs">
+            <label class="px-3 py-2 rounded-xl bg-custom-subtle border border-custom hover:border-custom-accent cursor-pointer flex items-center gap-1 text-xs text-custom-main">
+              <i data-lucide="image-plus" class="w-4 h-4 text-custom-accent"></i> เลือกรูป
+              <input type="file" accept="image/*" class="hidden" onchange="handleImageFileUpload(event, 'formWorkImage')">
+            </label>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div>
+          <label class="block font-medium text-custom-main mb-1">คำอธิบายรายละเอียดผลงาน</label>
+          <textarea id="formWorkDesc" rows="3" placeholder="อธิบายจุดเด่น วัตถุประสงค์ หรือกระบวนการจัดทำ..." class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main focus:outline-none focus:border-custom-accent"></textarea>
+        </div>
+
+        <!-- Link & Download Text -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-custom-main mb-1">ลิงก์ผลงาน / เอกสาร (URL)</label>
+            <input type="text" id="formWorkLink" placeholder="#" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main focus:outline-none focus:border-custom-accent">
+          </div>
+          <div>
+            <label class="block font-medium text-custom-main mb-1">ข้อความปุ่มเปิดดู</label>
+            <input type="text" id="formWorkDownloadText" placeholder="ดูตัวอย่างผลงาน / ดาวน์โหลด" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main focus:outline-none focus:border-custom-accent">
+          </div>
+        </div>
+
+        <!-- Tags -->
+        <div>
+          <label class="block font-medium text-custom-main mb-1">แท็ก (คั่นด้วยเครื่องหมายจุลภาค , )</label>
+          <input type="text" id="formWorkTags" placeholder="HTML, Active Learning, โครงงาน" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main focus:outline-none focus:border-custom-accent">
+        </div>
+
+        <!-- Form Actions -->
+        <div class="pt-4 border-t border-custom flex justify-end space-x-2">
+          <button type="button" onclick="closeWorkModal()" class="px-4 py-2 rounded-xl border border-custom text-custom-muted hover:bg-custom-subtle font-medium">
+            ยกเลิก
+          </button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-custom-accent text-white font-semibold hover:opacity-90">
+            บันทึกผลงาน
+          </button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+
+  <!-- =========================================================================
+       7. MODAL 3: เพิ่ม/แก้ไขรายวิชา (Course Edit Modal)
+       ========================================================================= -->
+  <div id="courseEditModal" class="fixed inset-0 z-50 hidden items-center justify-center modal-backdrop p-4 overflow-y-auto">
+    <div class="bg-custom-surface border border-custom rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative my-8">
+      
+      <div class="flex items-center justify-between pb-4 border-b border-custom mb-6">
+        <h3 id="courseModalTitle" class="text-lg font-heading font-bold text-custom-main flex items-center gap-2">
+          <i data-lucide="book-open" class="w-5 h-5 text-custom-accent"></i> รายวิชาการเรียนการสอน
+        </h3>
+        <button onclick="closeCourseModal()" class="text-custom-muted hover:text-custom-main">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form onsubmit="saveCourse(event)" class="space-y-4 text-xs sm:text-sm">
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-custom-main mb-1">รหัสวิชา <span class="text-red-500">*</span></label>
+            <input type="text" id="formCourseCode" required placeholder="เช่น ว21103" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main focus:outline-none focus:border-custom-accent font-num">
+          </div>
+          <div>
+            <label class="block font-medium text-custom-main mb-1">ชื่อวิชา <span class="text-red-500">*</span></label>
+            <input type="text" id="formCourseName" required placeholder="เช่น วิทยาการคำนวณ" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main focus:outline-none focus:border-custom-accent">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-custom-main mb-1">ระดับชั้น</label>
+            <input type="text" id="formCourseLevel" placeholder="เช่น ชั้นมัธยมศึกษาปีที่ 1" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main focus:outline-none focus:border-custom-accent">
+          </div>
+          <div>
+            <label class="block font-medium text-custom-main mb-1">ภาคเรียน</label>
+            <input type="text" id="formCourseSemester" placeholder="เช่น ภาคเรียนที่ 1" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main focus:outline-none focus:border-custom-accent">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-medium text-custom-main mb-1">หน่วยกิต / คาบเรียน</label>
+          <input type="text" id="formCourseCredits" placeholder="เช่น 1.0 หน่วยกิต (2 คาบ/สัปดาห์)" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main focus:outline-none focus:border-custom-accent">
+        </div>
+
+        <div>
+          <label class="block font-medium text-custom-main mb-1">คำอธิบายรายวิชาโดยสรุป</label>
+          <textarea id="formCourseDesc" rows="3" placeholder="ระบุเนื้อหาหลักหรือเป้าหมายการเรียนรู้ในวิชานี้..." class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main focus:outline-none focus:border-custom-accent"></textarea>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="pt-4 border-t border-custom flex justify-end space-x-2">
+          <button type="button" onclick="closeCourseModal()" class="px-4 py-2 rounded-xl border border-custom text-custom-muted hover:bg-custom-subtle font-medium">
+            ยกเลิก
+          </button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-custom-accent text-white font-semibold hover:opacity-90">
+            บันทึกรายวิชา
+          </button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+
+  <!-- =========================================================================
+       8. MODAL 4: แก้ไขข้อมูลประวัติอาจารย์ (Teacher Profile Edit Modal)
+       ========================================================================= -->
+  <div id="teacherEditModal" class="fixed inset-0 z-50 hidden items-center justify-center modal-backdrop p-4 overflow-y-auto">
+    <div class="bg-custom-surface border border-custom rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl relative my-8">
+      
+      <div class="flex items-center justify-between pb-4 border-b border-custom mb-6">
+        <h3 class="text-lg font-heading font-bold text-custom-main flex items-center gap-2">
+          <i data-lucide="user-check" class="w-5 h-5 text-custom-accent"></i> แก้ไขข้อมูลประวัติอาจารย์ (วิชาการ)
+        </h3>
+        <button onclick="closeTeacherModal()" class="text-custom-muted hover:text-custom-main">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form onsubmit="saveTeacherProfile(event)" class="space-y-4 text-xs sm:text-sm">
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-custom-main mb-1">ชื่อที่แสดง</label>
+            <input type="text" id="formTeacherName" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main focus:outline-none focus:border-custom-accent">
+          </div>
+          <div>
+            <label class="block font-medium text-custom-main mb-1">ชื่อ-นามสกุลทางการ</label>
+            <input type="text" id="formTeacherFullName" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main focus:outline-none focus:border-custom-accent">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-custom-main mb-1">ตำแหน่ง / วิทยฐานะ</label>
+            <input type="text" id="formTeacherPosition" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main focus:outline-none focus:border-custom-accent">
+          </div>
+          <div>
+            <label class="block font-medium text-custom-main mb-1">โรงเรียน / สถานศึกษา</label>
+            <input type="text" id="formTeacherSchool" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main focus:outline-none focus:border-custom-accent">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-medium text-custom-main mb-1">กลุ่มสาระการเรียนรู้</label>
+          <input type="text" id="formTeacherDept" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main focus:outline-none focus:border-custom-accent">
+        </div>
+
+        <!-- Avatar Image URL & Local file upload -->
+        <div>
+          <label class="block font-medium text-custom-main mb-1">รูปถ่ายโปรไฟล์ (URL หรืออัปโหลดจากเครื่อง)</label>
+          <div class="flex gap-2">
+            <input type="text" id="formTeacherAvatar" class="flex-1 px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main focus:outline-none focus:border-custom-accent text-xs">
+            <label class="px-3 py-2 rounded-xl bg-custom-subtle border border-custom hover:border-custom-accent cursor-pointer flex items-center gap-1 text-xs text-custom-main">
+              <i data-lucide="upload" class="w-4 h-4 text-custom-accent"></i> เลือกรูป
+              <input type="file" accept="image/*" class="hidden" onchange="handleImageFileUpload(event, 'formTeacherAvatar')">
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-medium text-custom-main mb-1">ปรัชญา / คติพจน์การจัดการเรียนรู้</label>
+          <input type="text" id="formTeacherPhil" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main focus:outline-none focus:border-custom-accent">
+        </div>
+
+        <div>
+          <label class="block font-medium text-custom-main mb-1">ประวัติย่อและจุดเน้นการสอน</label>
+          <textarea id="formTeacherBio" rows="3" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main focus:outline-none focus:border-custom-accent"></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <div>
+            <label class="block font-medium text-custom-main mb-1">อีเมล</label>
+            <input type="email" id="formTeacherEmail" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main focus:outline-none focus:border-custom-accent">
+          </div>
+          <div>
+            <label class="block font-medium text-custom-main mb-1">เบอร์โทร</label>
+            <input type="text" id="formTeacherPhone" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main focus:outline-none focus:border-custom-accent font-num">
+          </div>
+          <div>
+            <label class="block font-medium text-custom-main mb-1">Line ID</label>
+            <input type="text" id="formTeacherLine" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main focus:outline-none focus:border-custom-accent">
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="pt-4 border-t border-custom flex justify-end space-x-2">
+          <button type="button" onclick="closeTeacherModal()" class="px-4 py-2 rounded-xl border border-custom text-custom-muted hover:bg-custom-subtle font-medium">
+            ยกเลิก
+          </button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-custom-accent text-white font-semibold hover:opacity-90">
+            บันทึกข้อมูลอาจารย์
+          </button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+
+  <!-- =========================================================================
+       9. Floating Edit Mode Quick Bar (เมื่ออยู่ในโหมดแก้ไข)
+       ========================================================================= -->
+  <div id="editFloatingBar" class="hidden no-print fixed bottom-6 right-6 z-40 bg-custom-surface border border-custom shadow-2xl rounded-2xl p-2.5 flex items-center space-x-2">
+    <button onclick="openWorkModal()" class="px-3.5 py-2 rounded-xl bg-custom-accent text-white text-xs font-semibold hover:opacity-90 flex items-center gap-1.5 shadow-sm">
+      <i data-lucide="plus" class="w-4 h-4"></i> เพิ่มผลงาน
+    </button>
+    <button onclick="openCourseModal()" class="px-3.5 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main text-xs font-semibold hover:border-custom-accent flex items-center gap-1.5">
+      <i data-lucide="book-plus" class="w-4 h-4 text-custom-accent"></i> เพิ่มวิชา
+    </button>
+    <button onclick="exportDataAsJSON()" class="p-2 rounded-xl bg-custom-subtle border border-custom text-custom-main hover:border-custom-accent" title="บันทึก/ส่งออก data.json">
+      <i data-lucide="save" class="w-4 h-4 text-custom-accent"></i>
+    </button>
+    <button onclick="toggleEditMode()" class="p-2 rounded-xl bg-stone-200 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:opacity-80" title="ปิดโหมดแก้ไข">
+      <i data-lucide="check" class="w-4 h-4"></i>
+    </button>
+  </div>
+
+
+  <!-- =========================================================================
+       10. Toast Notification Pill
+       ========================================================================= -->
+  <div id="toastNotification" class="hidden no-print fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-stone-900/95 dark:bg-white/95 text-white dark:text-stone-900 px-5 py-3 rounded-2xl shadow-xl flex items-center space-x-2.5 text-xs sm:text-sm font-medium transition-all duration-300 translate-y-10 opacity-0">
+    <i data-lucide="check-circle-2" class="w-4 h-4 text-green-400 dark:text-green-600"></i>
+    <span id="toastMessage">บันทึกข้อมูลเรียบร้อยแล้ว</span>
+  </div>
+
+
+  <!-- Data and Application Logic Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

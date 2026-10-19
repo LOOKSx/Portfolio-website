@@ -1,0 +1,1175 @@
+<!-- =========================================================================
+     1. Navigation Header
+     ========================================================================= -->
+<header class="border-b border-custom bg-custom-surface/90 backdrop-blur-md sticky top-0 z-40 transition-colors">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+    
+    <!-- Brand Logo -->
+    <a href="#" class="flex items-center space-x-3 group">
+      <div class="w-11 h-11 rounded-2xl bg-custom-accent text-white flex items-center justify-center shadow-md transition-transform duration-300 group-hover:scale-105">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"></path>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"></path>
+        </svg>
+      </div>
+      <div>
+        <span class="font-heading font-bold text-lg sm:text-xl text-custom-main tracking-tight block leading-tight">
+          พุศิพงศ์ ราชรักษ์
+        </span>
+        <span class="text-xs text-custom-muted block flex items-center gap-1.5">
+          <span>ปวส.2 สทส2 | ครูผู้สอน: ครูอ๋อน</span>
+          <span class="inline-block w-2 h-2 rounded-full" [ngClass]="portfolio.isBackendOnline() ? 'bg-green-500' : 'bg-amber-500'" [title]="portfolio.databaseType()"></span>
+        </span>
+      </div>
+    </a>
+
+    <!-- Desktop Nav Links -->
+    <nav class="hidden md:flex items-center space-x-6 text-sm font-medium text-custom-muted">
+      <a href="#teacher-profile" class="hover:text-custom-accent transition-colors py-2">ประวัตินักศึกษา</a>
+      <a href="#courses-section" class="hover:text-custom-accent transition-colors py-2">รายวิชาที่เรียน</a>
+      <a href="#portfolio-section" class="hover:text-custom-accent transition-colors py-2">ผลงานแอปพลิเคชัน</a>
+      <a href="#downloads-section" class="hover:text-custom-accent transition-colors py-2">เอกสารโครงงาน</a>
+      <a href="#contact-section" class="hover:text-custom-accent transition-colors py-2">ติดต่อ</a>
+    </nav>
+
+    <!-- Controls (Backend / TiDB pill, Edit Mode, Theme, Print) -->
+    <div class="flex items-center space-x-2 sm:space-x-3 no-print">
+      
+      <!-- Database status pill -->
+      <span class="hidden xl:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-custom-subtle border border-custom text-custom-muted">
+        <span class="w-2 h-2 rounded-full" [ngClass]="portfolio.isBackendOnline() ? 'bg-green-500' : 'bg-amber-500'"></span>
+        {{ portfolio.databaseType() }}
+      </span>
+
+      <!-- Secret / Admin Controls -->
+      @if (!portfolio.isSecretAuthenticated()) {
+        <!-- Secret Lock / Entry Button -->
+        <button (click)="openSecretModal()" 
+                class="px-3 py-2 rounded-xl border border-custom bg-custom-subtle text-custom-main hover:border-custom-accent text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5"
+                title="เข้าสู่โหมดแก้ไขลับ (รหัสลับตรงลิงก์: phuttiphongF, รหัสเข้า: 119236)">
+          <svg class="w-4 h-4 text-custom-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+          </svg>
+          <span class="hidden sm:inline">โหมดแก้ไขลับ</span>
+        </button>
+      } @else {
+        <!-- Active Secret Admin Controls -->
+        <div class="flex items-center space-x-1 sm:space-x-1.5">
+          <button (click)="portfolio.toggleEditMode()" 
+                  class="px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 shadow-sm"
+                  [ngClass]="portfolio.isEditMode() ? 'bg-amber-600 text-white' : 'bg-custom-subtle text-custom-main border border-custom'">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+            </svg>
+            <span class="hidden sm:inline">{{ portfolio.isEditMode() ? 'อยู่ในโหมดแก้ไข' : 'ดูโหมดทั่วไป' }}</span>
+          </button>
+          
+          <button (click)="copySecretLink()" 
+                  class="p-2 sm:px-2.5 sm:py-2 rounded-xl border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 text-xs font-medium hover:bg-amber-100 flex items-center gap-1"
+                  title="คัดลอกลิงก์ลับเข้าใช้งาน (?secret=phuttiphongF)">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+            </svg>
+            <span class="hidden lg:inline text-xs">ลิงก์ลับ</span>
+          </button>
+
+          <button (click)="exitSecretEditMode()" 
+                  class="p-2 sm:px-2.5 sm:py-2 rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/50 text-red-600 dark:text-red-400 text-xs font-semibold hover:bg-red-100 flex items-center gap-1"
+                  title="ล็อกระบบและออกจากโหมดแก้ไข">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+            </svg>
+            <span class="hidden lg:inline text-xs">ล็อก</span>
+          </button>
+        </div>
+      }
+
+      <!-- Theme Switcher (White & Warm Brown / Dark Mode) -->
+      <button (click)="portfolio.toggleTheme()" 
+              class="p-2 sm:px-3 sm:py-2 rounded-xl border border-custom bg-custom-subtle text-custom-main text-xs sm:text-sm font-medium hover:border-custom-accent transition-all flex items-center gap-1.5"
+              title="สลับโหมดสีสว่าง/โหมดสีดำ">
+        @if (portfolio.isDarkMode()) {
+          <!-- Sun Icon -->
+          <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+          </svg>
+          <span class="hidden lg:inline text-xs">โหมดสว่าง</span>
+        } @else {
+          <!-- Moon Icon -->
+          <svg class="w-4 h-4 text-custom-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+          </svg>
+          <span class="hidden lg:inline text-xs">โหมดสีดำ</span>
+        }
+      </button>
+
+      <!-- Print Button -->
+      <button (click)="printPortfolio()" 
+              class="p-2 sm:px-3 sm:py-2 rounded-xl border border-custom bg-custom-subtle text-custom-main text-xs sm:text-sm font-medium hover:border-custom-accent transition-all flex items-center gap-1.5"
+              title="พิมพ์หรือบันทึกเป็น PDF">
+        <svg class="w-4 h-4 text-custom-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+        </svg>
+        <span class="hidden xl:inline text-xs">พิมพ์ / PDF</span>
+      </button>
+
+    </div>
+  </div>
+</header>
+
+<!-- Floating Admin Notification Bar (When authenticated and in edit mode) -->
+@if (portfolio.isSecretAuthenticated() && portfolio.isEditMode()) {
+  <div class="bg-gradient-to-r from-amber-600 via-amber-700 to-amber-900 text-white py-2 px-4 sm:px-8 text-xs font-medium sticky top-20 z-30 shadow-md flex flex-wrap items-center justify-between gap-2 no-print transition-all">
+    <div class="flex items-center space-x-2">
+      <span class="inline-flex w-2.5 h-2.5 rounded-full bg-amber-300 animate-pulse"></span>
+      <span>👑 <strong>โหมดแก้ไขลับ (Admin):</strong> นาย พุศิพงศ์ ราชรักษ์ — ปลดล็อกสิทธิ์แก้ไข เพิ่ม ลบ ทุกข้อมูลบนเว็บไซต์</span>
+    </div>
+    <div class="flex items-center space-x-2">
+      <button (click)="copySecretLink()" class="px-2.5 py-1 rounded-lg bg-black/20 hover:bg-black/30 underline flex items-center gap-1" title="คัดลอกลิงก์ลับ">
+        คัดลอกลิงก์ลับ (?secret=phuttiphongF)
+      </button>
+      <button (click)="exitSecretEditMode()" class="px-2.5 py-1 rounded-lg bg-red-700/90 hover:bg-red-800 text-white font-semibold">
+        ล็อกระบบ
+      </button>
+    </div>
+  </div>
+}
+
+
+<!-- =========================================================================
+     2. Main Content
+     ========================================================================= -->
+<main class="flex-grow">
+
+  <!-- -----------------------------------------------------------------------
+       SECTION 1: ประวัตินักศึกษา & ข้อมูลโครงงาน (Student Academic Profile)
+       ----------------------------------------------------------------------- -->
+  <section id="teacher-profile" class="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 border-b border-custom transition-colors relative overflow-hidden">
+    <div class="max-w-7xl mx-auto relative z-10">
+      
+      <!-- Edit Profile Button (When edit mode active) -->
+      @if (portfolio.isEditMode()) {
+        <div class="flex justify-end mb-4">
+          <button (click)="openEditTeacherModal()" class="px-4 py-2 rounded-xl bg-custom-accent text-white text-xs sm:text-sm font-medium hover:opacity-90 shadow-sm transition-all flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+            </svg>
+            แก้ไขข้อมูลประวัตินักศึกษา
+          </button>
+        </div>
+      }
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+        
+        <!-- Profile Column 1: Avatar & Identity (4 Cols) -->
+        <div class="lg:col-span-4 flex flex-col items-center text-center lg:text-left lg:items-start">
+          <div class="relative group">
+            <div class="w-48 h-48 sm:w-56 sm:h-56 rounded-3xl overflow-hidden p-1.5 bg-gradient-to-tr from-amber-700/30 to-amber-200/50 dark:from-amber-600/30 dark:to-stone-700/50 shadow-card">
+              <img [src]="teacher?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=600&auto=format&fit=crop'" 
+                   [alt]="teacher?.name" 
+                   class="w-full h-full object-cover rounded-[22px] transition-transform duration-500 group-hover:scale-105">
+            </div>
+
+            <div class="absolute -bottom-3 right-2 sm:right-4 px-3 py-1 rounded-full bg-custom-surface border border-custom shadow-md flex items-center gap-1.5 text-xs font-semibold text-custom-accent">
+              <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+              </svg>
+              <span>ปวส.2 สทส2 เลขที่ 12</span>
+            </div>
+          </div>
+
+          <div class="mt-6 w-full">
+            <span class="inline-block px-3 py-1 rounded-full text-xs font-medium bg-custom-accent-soft text-custom-accent mb-2">
+              นักศึกษาผู้จัดทำแฟ้มสะสมผลงาน (Student Portfolio)
+            </span>
+            <h1 class="text-2xl sm:text-3xl font-heading font-bold text-custom-main tracking-tight">
+              {{ teacher?.name }}
+            </h1>
+            <p class="text-sm font-medium text-custom-muted mt-1">
+              {{ teacher?.position }}
+            </p>
+            <p class="text-xs sm:text-sm text-custom-accent font-semibold mt-1">
+              {{ teacher?.department }}
+            </p>
+            <p class="text-xs text-custom-muted mt-0.5">
+              {{ teacher?.school }}
+            </p>
+            <!-- Instructor Tag -->
+            <div class="mt-2 text-xs font-medium px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-900 dark:text-amber-200 inline-flex items-center gap-1.5">
+              <span>🎓</span> อาจารย์ผู้สอน / ที่ปรึกษา: <strong class="text-custom-accent">ครูอ๋อน (อาจารย์อ๋อน)</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Profile Column 2: Philosophy, Stats & Academic Credentials (8 Cols) -->
+        <div class="lg:col-span-8 flex flex-col justify-center">
+          
+          <!-- Learning Goals / Passion Callout -->
+          <div class="p-6 rounded-2xl bg-custom-subtle border border-custom mb-6 relative">
+            <div class="text-xs font-bold uppercase tracking-wider text-custom-accent mb-2 flex items-center gap-1.5">
+              <span>✦</span> ปณิธานและเป้าหมายการเรียนรู้ (Learning Goals & Passion)
+            </div>
+            <p class="text-sm sm:text-base font-medium italic text-custom-main leading-relaxed">
+              “{{ teacher?.teachingPhilosophy }}”
+            </p>
+          </div>
+
+          <!-- Academic Bio -->
+          <p class="text-sm sm:text-base text-custom-muted leading-relaxed mb-6">
+            {{ teacher?.bio }}
+          </p>
+
+          <!-- 4 Academic KPI Stats -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+            @for (stat of teacher?.stats; track stat.label) {
+              <div class="p-4 rounded-xl border border-custom bg-custom-surface transition-all duration-200 hover:border-custom-accent">
+                <div class="text-2xl sm:text-3xl font-bold font-num text-custom-accent">{{ stat.value }}</div>
+                <div class="text-xs sm:text-sm font-medium text-custom-muted mt-1">{{ stat.label }} ({{ stat.unit }})</div>
+              </div>
+            }
+          </div>
+
+          <!-- Academic Background & Recognitions -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            <!-- Education -->
+            <div class="p-5 rounded-2xl bg-custom-surface border border-custom">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-custom-accent mb-3 flex items-center gap-1.5">
+                <span>📚</span> ประวัติการศึกษา (Education Background)
+              </h4>
+              <ul class="space-y-3">
+                @for (edu of teacher?.education; track edu.degree) {
+                  <li class="flex items-start space-x-3 text-sm">
+                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-custom-accent-soft text-custom-accent text-xs font-bold mt-0.5">✓</span>
+                    <div>
+                      <span class="font-semibold text-custom-main">{{ edu.degree }}</span>
+                      <div class="text-custom-muted text-xs">{{ edu.institution }} (ปี พ.ศ. {{ edu.year }})</div>
+                    </div>
+                  </li>
+                }
+              </ul>
+            </div>
+
+            <!-- Academic Achievements -->
+            <div class="p-5 rounded-2xl bg-custom-surface border border-custom">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-custom-accent mb-3 flex items-center gap-1.5">
+                <span>🏆</span> ทักษะและความเชี่ยวชาญ (Skills & Honors)
+              </h4>
+              <ul class="space-y-3">
+                @for (achieve of teacher?.academicAchievements; track achieve) {
+                  <li class="flex items-start space-x-3 text-sm">
+                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 text-xs font-bold mt-0.5">★</span>
+                    <span class="text-custom-main">{{ achieve }}</span>
+                  </li>
+                }
+              </ul>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- -----------------------------------------------------------------------
+       SECTION 2: รายวิชาในหลักสูตรที่ศึกษา (Curriculum Courses)
+       ----------------------------------------------------------------------- -->
+  <section id="courses-section" class="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 border-b border-custom bg-custom-subtle/50 transition-colors">
+    <div class="max-w-7xl mx-auto">
+      
+      <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-custom-accent flex items-center gap-1 mb-1">
+            <span>📖</span> Curriculum & Courses
+          </span>
+          <h2 class="text-2xl sm:text-3xl font-heading font-bold text-custom-main">
+            รายวิชาในหลักสูตรที่ศึกษา
+          </h2>
+          <p class="text-xs sm:text-sm text-custom-muted mt-1">
+            รายวิชาหลัก: 31901-2009 การพัฒนาซอฟต์แวร์สำหรับอุปกรณ์เคลื่อนที่ (อาจารย์ผู้สอน: ครูอ๋อน)
+          </p>
+        </div>
+
+        @if (portfolio.isEditMode()) {
+          <button (click)="openNewCourseModal()" class="px-4 py-2.5 rounded-xl bg-custom-accent text-white text-xs sm:text-sm font-semibold hover:opacity-90 shadow-sm transition-all flex items-center gap-2 self-start md:self-auto">
+            + เพิ่มรายวิชาใหม่
+          </button>
+        }
+      </div>
+
+      <!-- Course Cards Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        @for (course of courses; track course.id) {
+          <div class="relative bg-custom-surface border border-custom rounded-2xl p-6 transition-all duration-300 hover:shadow-hover group">
+            
+            @if (portfolio.isEditMode()) {
+              <div class="absolute top-4 right-4 flex space-x-1.5 z-10">
+                <button (click)="openEditCourseModal(course)" class="p-1.5 rounded-lg bg-custom-accent-soft text-custom-accent hover:bg-custom-accent hover:text-white transition-colors" title="แก้ไขวิชา">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                </button>
+                <button (click)="deleteCourse(course)" class="p-1.5 rounded-lg bg-red-100 text-red-700 hover:bg-red-600 hover:text-white transition-colors" title="ลบวิชา">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
+              </div>
+            }
+
+            <div class="flex items-center space-x-3 mb-3">
+              <span class="px-2.5 py-1 text-xs font-bold rounded-md bg-custom-accent text-white font-num tracking-wide">{{ course.code }}</span>
+              <span class="text-xs px-2.5 py-0.5 rounded-full bg-custom-subtle text-custom-muted font-medium">{{ course.semester }}</span>
+            </div>
+
+            <h3 class="text-lg font-bold text-custom-main group-hover:text-custom-accent transition-colors mb-2">{{ course.name }}</h3>
+            <p class="text-xs font-medium text-custom-accent mb-2">ระดับ: {{ course.level }} | {{ course.credits }}</p>
+            <p class="text-xs text-custom-muted line-clamp-3 mb-4 leading-relaxed">{{ course.description }}</p>
+
+            <div class="pt-4 border-t border-custom flex items-center justify-between">
+              <span class="text-xs text-custom-muted flex items-center gap-1.5 font-medium">
+                ผลงานสะสม: <strong class="text-custom-main font-num">{{ getCourseWorksCount(course.id) }}</strong> ชิ้น
+              </span>
+              <button (click)="filterByCourse(course.id)" class="text-xs font-semibold text-custom-accent hover:underline flex items-center gap-1">
+                ดูผลงานวิชานี้ →
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- -----------------------------------------------------------------------
+       SECTION 3: คลังเก็บข้อมูลผลงานของรายวิชา (Course Portfolio Hub)
+       ----------------------------------------------------------------------- -->
+  <section id="portfolio-section" class="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 transition-colors">
+    <div class="max-w-7xl mx-auto">
+      
+      <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-custom-accent flex items-center gap-1 mb-1">
+            <span>📱</span> Mobile Apps & Software Projects
+          </span>
+          <h2 class="text-2xl sm:text-3xl font-heading font-bold text-custom-main">
+            คลังโครงงานและผลงานซอฟต์แวร์
+          </h2>
+          <p class="text-xs sm:text-sm text-custom-muted mt-1">
+            รวบรวมแอปพลิเคชันบนอุปกรณ์เคลื่อนที่ โครงงานซอฟต์แวร์ และใบงานปฏิบัติการ โดย นาย พุศิพงศ์ ราชรักษ์ (อาจารย์ผู้สอน: ครูอ๋อน)
+          </p>
+        </div>
+
+        @if (portfolio.isEditMode()) {
+          <button (click)="openNewWorkModal()" class="px-4 py-2.5 rounded-xl bg-custom-accent text-white text-xs sm:text-sm font-semibold hover:opacity-90 shadow-sm transition-all flex items-center gap-2 self-start md:self-auto">
+            + เพิ่มผลงานใหม่ในวิชา
+          </button>
+        }
+      </div>
+
+      <!-- Filter Controls Box -->
+      <div class="bg-custom-surface border border-custom rounded-2xl p-4 sm:p-5 mb-8 shadow-sm space-y-4">
+        
+        <!-- 1. Course Filter Tabs -->
+        <div>
+          <div class="text-xs font-semibold text-custom-muted mb-2">เลือกรหัสรายวิชา:</div>
+          <div class="flex flex-wrap gap-2">
+            <button (click)="filterByCourse('all')" 
+                    class="px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all"
+                    [ngClass]="selectedCourseFilter === 'all' ? 'bg-custom-accent text-white shadow-sm' : 'bg-custom-surface text-custom-muted border border-custom hover:border-custom-accent'">
+              ทั้งหมด ({{ works.length }})
+            </button>
+            @for (c of courses; track c.id) {
+              <button (click)="filterByCourse(c.id)" 
+                      class="px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5"
+                      [ngClass]="selectedCourseFilter === c.id ? 'bg-custom-accent text-white shadow-sm' : 'bg-custom-surface text-custom-muted border border-custom hover:border-custom-accent'">
+                <span class="font-num font-semibold">{{ c.code }}</span>
+                <span class="hidden md:inline">{{ c.name.length > 16 ? c.name.slice(0, 16) + '...' : c.name }}</span>
+                <span class="text-xs px-1.5 py-0.2 rounded-full" [ngClass]="selectedCourseFilter === c.id ? 'bg-white/20' : 'bg-custom-subtle'">
+                  {{ getCourseWorksCount(c.id) }}
+                </span>
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- 2. Sub-Category Pills & Search Bar -->
+        <div class="pt-3 border-t border-custom flex flex-col md:flex-row items-center justify-between gap-4">
+          <div class="flex flex-wrap gap-1.5 w-full md:w-auto">
+            <button (click)="filterByCategory('all')" 
+                    class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                    [ngClass]="selectedCategoryFilter === 'all' ? 'bg-custom-accent text-white' : 'bg-custom-surface text-custom-muted border border-custom hover:border-custom-accent'">
+              ทุกหมวดหมู่
+            </button>
+            <button (click)="filterByCategory('student')" 
+                    class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                    [ngClass]="selectedCategoryFilter === 'student' ? 'bg-custom-accent text-white' : 'bg-custom-surface text-custom-muted border border-custom hover:border-custom-accent'">
+              🌟 ผลงานนักเรียน
+            </button>
+            <button (click)="filterByCategory('media')" 
+                    class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                    [ngClass]="selectedCategoryFilter === 'media' ? 'bg-custom-accent text-white' : 'bg-custom-surface text-custom-muted border border-custom hover:border-custom-accent'">
+              💡 สื่อนวัตกรรมการสอน
+            </button>
+            <button (click)="filterByCategory('plan')" 
+                    class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                    [ngClass]="selectedCategoryFilter === 'plan' ? 'bg-custom-accent text-white' : 'bg-custom-surface text-custom-muted border border-custom hover:border-custom-accent'">
+              📑 แผนการสอน & ใบงาน
+            </button>
+            <button (click)="filterByCategory('award')" 
+                    class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                    [ngClass]="selectedCategoryFilter === 'award' ? 'bg-custom-accent text-white' : 'bg-custom-surface text-custom-muted border border-custom hover:border-custom-accent'">
+              🏆 รางวัล & ผลสัมฤทธิ์
+            </button>
+          </div>
+
+          <div class="flex items-center space-x-2 w-full md:w-72">
+            <input type="text" 
+                   [(ngModel)]="searchQuery" 
+                   placeholder="ค้นหาชื่อผลงาน, แท็ก..." 
+                   class="w-full px-3 py-2 text-xs rounded-xl bg-custom-subtle border border-custom text-custom-main placeholder-custom-muted focus:outline-none focus:border-custom-accent transition-colors">
+            <span class="text-xs px-2.5 py-1.5 rounded-xl bg-custom-subtle text-custom-muted font-num font-semibold whitespace-nowrap">
+              {{ filteredWorks.length }} ชิ้น
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Works Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @for (w of filteredWorks; track w.id) {
+          <div class="portfolio-card bg-custom-surface border border-custom rounded-2xl overflow-hidden flex flex-col relative group">
+            
+            @if (portfolio.isEditMode()) {
+              <div class="absolute top-3 right-3 flex space-x-1 z-20">
+                <button (click)="openEditWorkModal(w)" class="p-1.5 rounded-lg bg-custom-surface/90 text-custom-accent shadow-sm border border-custom hover:bg-custom-accent hover:text-white transition-colors" title="แก้ไขผลงาน">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                </button>
+                <button (click)="deleteWork(w, $event)" class="p-1.5 rounded-lg bg-custom-surface/90 text-red-600 shadow-sm border border-custom hover:bg-red-600 hover:text-white transition-colors" title="ลบผลงาน">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
+              </div>
+            }
+
+            <!-- Work Image -->
+            <div class="relative h-48 sm:h-52 overflow-hidden bg-custom-subtle cursor-pointer" (click)="openWorkDetail(w)">
+              <img [src]="w.image || 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?q=80&w=800&auto=format&fit=crop'" 
+                   [alt]="w.title" 
+                   class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                   loading="lazy">
+              <div class="absolute top-3 left-3 flex flex-wrap gap-1.5">
+                <span class="px-2 py-0.5 rounded text-xs font-bold font-num bg-custom-accent text-white shadow-sm">
+                  {{ getCourseByWork(w)?.code || 'ทั่วไป' }}
+                </span>
+                <span class="px-2 py-0.5 rounded text-xs font-semibold"
+                      [ngClass]="{
+                        'badge-student': w.category === 'student',
+                        'badge-media': w.category === 'media',
+                        'badge-plan': w.category === 'plan',
+                        'badge-award': w.category === 'award'
+                      }">
+                  {{ w.categoryLabel || 'ผลงาน' }}
+                </span>
+              </div>
+              <span class="absolute bottom-2 right-2 px-2 py-0.5 rounded text-[11px] bg-black/60 text-white backdrop-blur-sm">
+                {{ w.date }}
+              </span>
+            </div>
+
+            <!-- Work Details -->
+            <div class="p-5 flex-1 flex flex-col justify-between">
+              <div>
+                <h4 class="font-bold text-custom-main text-base line-clamp-2 hover:text-custom-accent transition-colors cursor-pointer mb-2" (click)="openWorkDetail(w)">
+                  {{ w.title }}
+                </h4>
+                <p class="text-xs text-custom-muted line-clamp-3 mb-3 leading-relaxed">
+                  {{ w.description }}
+                </p>
+              </div>
+
+              <div class="pt-3 border-t border-custom mt-auto">
+                <div class="flex items-center justify-between text-xs mb-2">
+                  <span class="text-custom-muted truncate max-w-[190px]">
+                    👤 {{ w.studentName || '-' }}
+                  </span>
+                  <button (click)="openWorkDetail(w)" class="text-custom-accent font-semibold flex items-center gap-1 hover:underline text-xs">
+                    ดูรายละเอียด →
+                  </button>
+                </div>
+
+                <div class="flex flex-wrap gap-1">
+                  @for (t of w.tagsList; track t) {
+                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-custom-subtle text-custom-muted">#{{ t }}</span>
+                  }
+                </div>
+              </div>
+            </div>
+
+          </div>
+        }
+      </div>
+
+      @if (filteredWorks.length === 0) {
+        <div class="py-16 text-center">
+          <h4 class="text-base font-bold text-custom-main">ไม่พบผลงานที่ตรงกับเงื่อนไขการค้นหา</h4>
+          <p class="text-xs text-custom-muted mt-1">ลองเปลี่ยนการเลือกรหัสวิชา หรือคำค้นหาใหม่อีกครั้ง</p>
+        </div>
+      }
+
+    </div>
+  </section>
+
+
+  <!-- -----------------------------------------------------------------------
+       SECTION 4: คลังเอกสารและดาวน์โหลด (Academic Downloads)
+       ----------------------------------------------------------------------- -->
+  <section id="downloads-section" class="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 border-t border-custom bg-custom-subtle/40 transition-colors">
+    <div class="max-w-7xl mx-auto">
+      
+      <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-custom-accent flex items-center gap-1 mb-1">
+            <span>📥</span> Academic Resources & Files
+          </span>
+          <h2 class="text-2xl sm:text-3xl font-heading font-bold text-custom-main">
+            คลังเอกสารและประมวลรายวิชา
+          </h2>
+          <p class="text-xs sm:text-sm text-custom-muted mt-1">
+            เอกสารประมวลรายวิชา (Syllabus), รายงานสรุปผลโครงงาน, และคู่มือทางเทคนิค (อาจารย์ผู้สอน: ครูอ๋อน)
+          </p>
+        </div>
+
+        @if (portfolio.isEditMode()) {
+          <button (click)="openNewDownloadModal()" class="px-4 py-2.5 rounded-xl bg-custom-accent text-white text-xs sm:text-sm font-semibold hover:opacity-90 shadow-sm transition-all flex items-center gap-2 self-start md:self-auto">
+            <span>+</span> เพิ่มเอกสารดาวน์โหลด
+          </button>
+        }
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        @for (d of downloads; track d.id) {
+          <div class="bg-custom-surface border border-custom rounded-2xl p-4 flex items-center justify-between transition-all hover:border-custom-accent hover:shadow-card relative group">
+            <div class="flex items-center space-x-3 flex-1 min-w-0 pr-2">
+              <div class="w-10 h-10 rounded-xl bg-custom-accent-soft text-custom-accent flex items-center justify-center font-bold text-xs uppercase font-num shrink-0">
+                {{ d.format }}
+              </div>
+              <div class="min-w-0">
+                <h5 class="text-sm font-bold text-custom-main truncate" [title]="d.title">{{ d.title }}</h5>
+                <p class="text-xs text-custom-muted">{{ d.course }} • ขนาด {{ d.size }}</p>
+              </div>
+            </div>
+
+            <div class="flex items-center space-x-1.5 shrink-0">
+              @if (portfolio.isEditMode()) {
+                <button (click)="openEditDownloadModal(d)" class="p-2 rounded-xl bg-custom-subtle text-custom-accent hover:bg-custom-accent hover:text-white transition-colors" title="แก้ไขเอกสาร">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                </button>
+                <button (click)="deleteDownload(d, $event)" class="p-2 rounded-xl bg-red-100 text-red-600 hover:bg-red-600 hover:text-white transition-colors" title="ลบเอกสาร">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
+              }
+              <a [href]="d.url" target="_blank" class="p-2.5 rounded-xl bg-custom-subtle text-custom-main hover:bg-custom-accent hover:text-white transition-colors" title="ดาวน์โหลด">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+              </a>
+            </div>
+          </div>
+        }
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- -----------------------------------------------------------------------
+       SECTION 5: ข้อมูลการติดต่อ (Contact & Affiliation)
+       ----------------------------------------------------------------------- -->
+  <section id="contact-section" class="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 border-t border-custom transition-colors">
+    <div class="max-w-7xl mx-auto">
+      <div class="bg-custom-surface border border-custom rounded-3xl p-6 sm:p-10 shadow-card">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          
+          <div class="lg:col-span-7">
+            <span class="text-xs font-bold uppercase tracking-wider text-custom-accent flex items-center gap-1 mb-2">
+              <span>✉️</span> Academic Inquiries
+            </span>
+            <h3 class="text-xl sm:text-2xl font-heading font-bold text-custom-main">
+              ติดต่อสอบถามและแลกเปลี่ยนเรียนรู้ทางวิชาการ
+            </h3>
+            <p class="text-xs sm:text-sm text-custom-muted mt-2 leading-relaxed">
+              ยินดีร่วมมือในการจัดกิจกรรมวิชาการ การพัฒนาสื่อการเรียนรู้สะเต็มศึกษา หรือแลกเปลี่ยนประสบการณ์การจัดทำข้อตกลงพัฒนางาน (ว.PA)
+            </p>
+          </div>
+
+          <div class="lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3 text-xs">
+            <div class="p-3.5 rounded-xl bg-custom-subtle border border-custom flex items-center space-x-3">
+              <div class="w-9 h-9 rounded-lg bg-custom-accent-soft text-custom-accent flex items-center justify-center font-bold">&#64;</div>
+              <div>
+                <span class="text-custom-muted block text-[11px]">อีเมลติดต่อ:</span>
+                <span class="font-semibold text-custom-main font-num">{{ teacher?.email }}</span>
+              </div>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-custom-subtle border border-custom flex items-center space-x-3">
+              <div class="w-9 h-9 rounded-lg bg-custom-accent-soft text-custom-accent flex items-center justify-center font-bold">📞</div>
+              <div>
+                <span class="text-custom-muted block text-[11px]">เบอร์โทรศัพท์:</span>
+                <span class="font-semibold text-custom-main font-num">{{ teacher?.phone }}</span>
+              </div>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-custom-subtle border border-custom flex items-center space-x-3">
+              <div class="w-9 h-9 rounded-lg bg-custom-accent-soft text-custom-accent flex items-center justify-center font-bold">💬</div>
+              <div>
+                <span class="text-custom-muted block text-[11px]">Line ID:</span>
+                <span class="font-semibold text-custom-main">{{ teacher?.lineId }}</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+
+<!-- =========================================================================
+     3. Footer
+     ========================================================================= -->
+<footer class="border-t border-custom bg-custom-surface py-8 px-4 text-center text-xs text-custom-muted transition-colors">
+  <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div class="flex items-center space-x-2">
+      <span>© 2026 นาย พุศิพงศ์ ราชรักษ์ | แฟ้มสะสมผลงาน ปวส.2 สทส2 (อาจารย์ผู้สอน: ครูอ๋อน)</span>
+    </div>
+    <div class="text-[11px] text-custom-muted">
+      Stack: Angular 19 (TypeScript, HTML, CSS) + Go (Golang) REST API + TiDB Distributed Database
+    </div>
+  </div>
+</footer>
+
+
+<!-- =========================================================================
+     4. MODAL: ดูรายละเอียดผลงาน (Work Detail Modal)
+     ========================================================================= -->
+@if (selectedWorkForDetail) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center modal-backdrop p-4 overflow-y-auto" (click)="closeWorkDetail()">
+    <div class="bg-custom-surface border border-custom rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl relative my-8" (click)="$event.stopPropagation()">
+      <button (click)="closeWorkDetail()" class="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center">✕</button>
+
+      <!-- Main Display Image (Cover or selected inside image) -->
+      <div class="h-64 sm:h-80 w-full overflow-hidden bg-stone-900 relative">
+        <img [src]="selectedDetailImage || selectedWorkForDetail.image" [alt]="selectedWorkForDetail.title" class="w-full h-full object-cover transition-all duration-300">
+        <div class="absolute bottom-3 left-4 flex gap-2">
+          <span class="px-2.5 py-1 rounded text-xs font-bold font-num bg-custom-accent text-white shadow">
+            {{ getCourseByWork(selectedWorkForDetail)?.code || 'วิชาการ' }}
+          </span>
+          <span class="px-2.5 py-1 rounded text-xs font-semibold bg-white/90 text-stone-900 shadow">
+            {{ selectedWorkForDetail.categoryLabel }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Thumbnail Strip for Inside Images / Gallery -->
+      @if (selectedWorkForDetail.galleryList && selectedWorkForDetail.galleryList.length > 0) {
+        <div class="px-6 sm:px-8 py-3 bg-custom-subtle/60 border-b border-custom">
+          <div class="text-xs font-semibold text-custom-muted mb-2 flex items-center gap-1.5">
+            <span>🖼️ รูปภาพผลงานทั้งหมด ({{ (selectedWorkForDetail.galleryList.length + 1) }} รูป - คลิกเพื่อเปลี่ยนรูปดู):</span>
+          </div>
+          <div class="flex gap-2 overflow-x-auto pb-1.5 scrollbar-thin">
+            <!-- Cover thumbnail -->
+            <button type="button" (click)="setDetailImage(selectedWorkForDetail.image)"
+              class="relative flex-shrink-0 w-16 h-12 rounded-lg overflow-hidden border-2 transition-all"
+              [class.border-custom-accent]="(selectedDetailImage || selectedWorkForDetail.image) === selectedWorkForDetail.image"
+              [class.border-transparent]="(selectedDetailImage || selectedWorkForDetail.image) !== selectedWorkForDetail.image"
+              [class.opacity-60]="(selectedDetailImage || selectedWorkForDetail.image) !== selectedWorkForDetail.image">
+              <img [src]="selectedWorkForDetail.image" class="w-full h-full object-cover" alt="ภาพหน้างาน">
+              <span class="absolute bottom-0 inset-x-0 bg-black/70 text-[9px] text-white text-center py-0.5 font-medium">หน้าปก</span>
+            </button>
+            <!-- Gallery thumbnails -->
+            @for (gImg of selectedWorkForDetail.galleryList; track $index) {
+              <button type="button" (click)="setDetailImage(gImg)"
+                class="relative flex-shrink-0 w-16 h-12 rounded-lg overflow-hidden border-2 transition-all"
+                [class.border-custom-accent]="selectedDetailImage === gImg"
+                [class.border-transparent]="selectedDetailImage !== gImg"
+                [class.opacity-60]="selectedDetailImage !== gImg">
+                <img [src]="gImg" class="w-full h-full object-cover" [alt]="'รูปข้างใน ' + ($index + 1)">
+                <span class="absolute bottom-0 inset-x-0 bg-black/70 text-[9px] text-white text-center py-0.5 font-medium">#{{ $index + 1 }}</span>
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      <div class="p-6 sm:p-8">
+        <div class="flex items-center justify-between text-xs text-custom-muted mb-2">
+          <span class="font-medium text-custom-main">👤 {{ selectedWorkForDetail.studentName }}</span>
+          <span class="font-num">{{ selectedWorkForDetail.date }}</span>
+        </div>
+        <h3 class="text-xl sm:text-2xl font-heading font-bold text-custom-main mb-4 leading-snug">{{ selectedWorkForDetail.title }}</h3>
+        <p class="text-sm text-custom-muted leading-relaxed mb-6 whitespace-pre-line">{{ selectedWorkForDetail.description }}</p>
+
+        <div class="flex flex-wrap gap-1.5 mb-6">
+          @for (tag of selectedWorkForDetail.tagsList; track tag) {
+            <span class="px-2.5 py-1 text-xs rounded-lg bg-custom-subtle text-custom-main font-medium">#{{ tag }}</span>
+          }
+        </div>
+
+        <div class="pt-4 border-t border-custom flex items-center justify-end space-x-3">
+          <button (click)="closeWorkDetail()" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-medium border border-custom hover:bg-custom-subtle text-custom-muted">ปิด</button>
+          <a [href]="selectedWorkForDetail.link" target="_blank" class="px-5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-custom-accent text-white hover:opacity-90">
+            {{ selectedWorkForDetail.downloadText }}
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+
+<!-- =========================================================================
+     5. MODAL: เพิ่ม/แก้ไขผลงาน (Work Edit Modal)
+     ========================================================================= -->
+@if (showWorkModal) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center modal-backdrop p-4 overflow-y-auto">
+    <div class="bg-custom-surface border border-custom rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl relative my-8 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-4 border-b border-custom mb-6">
+        <h3 class="text-lg font-heading font-bold text-custom-main">
+          {{ workForm.id ? 'แก้ไขผลงานในรายวิชา' : 'เพิ่มผลงานใหม่ในรายวิชา' }}
+        </h3>
+        <button (click)="closeWorkModal()" class="text-custom-muted hover:text-custom-main">✕</button>
+      </div>
+
+      <div class="space-y-4 text-xs sm:text-sm">
+        <div>
+          <label class="block font-medium text-custom-main mb-1">เลือกรหัสรายวิชา</label>
+          <select [(ngModel)]="workForm.courseId" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main">
+            @for (c of courses; track c.id) {
+              <option [value]="c.id">{{ c.code }} - {{ c.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-medium text-custom-main mb-1">ชื่อผลงาน</label>
+          <input type="text" [(ngModel)]="workForm.title" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-custom-main mb-1">หมวดหมู่</label>
+            <select [(ngModel)]="workForm.category" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main">
+              <option value="student">🌟 ผลงานนักเรียน</option>
+              <option value="media">💡 สื่อนวัตกรรมการสอน</option>
+              <option value="plan">📑 แผนการสอน & ใบงาน</option>
+              <option value="award">🏆 รางวัล & ผลสัมฤทธิ์</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-medium text-custom-main mb-1">วันเดือนปี / ภาคเรียน</label>
+            <input type="text" [(ngModel)]="workForm.date" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-medium text-custom-main mb-1">ผู้จัดทำ / นักเรียน</label>
+          <input type="text" [(ngModel)]="workForm.studentName" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main">
+        </div>
+
+        <!-- Section 1: ภาพหน้างาน (ภาพปก) -->
+        <div class="p-3.5 rounded-2xl bg-custom-subtle/60 border border-custom">
+          <label class="block font-semibold text-custom-main mb-1">
+            🖼️ ภาพหน้างาน (ภาพหน้าปกหลัก)
+          </label>
+          <p class="text-[11px] text-custom-muted mb-2">ใส่ลิงก์รูปภาพ หรือเลือกไฟล์จากเครื่องคอมพิวเตอร์ของคุณ</p>
+          <div class="flex gap-2 mb-2">
+            <input type="text" [(ngModel)]="workForm.image" placeholder="URL รูปภาพ หรือเลือกรูปจากเครื่อง" class="flex-1 px-3 py-2 rounded-xl bg-custom-surface border border-custom text-custom-main text-xs">
+            <label class="px-3.5 py-2 rounded-xl bg-custom-accent text-white cursor-pointer text-xs font-medium hover:opacity-90 flex items-center gap-1">
+              📁 เลือกรูป
+              <input type="file" accept="image/*" class="hidden" (change)="handleImageUpload($event, 'work')">
+            </label>
+          </div>
+          @if (workForm.image) {
+            <div class="relative w-full h-32 rounded-xl overflow-hidden border border-custom bg-black/20">
+              <img [src]="workForm.image" class="w-full h-full object-cover" alt="ภาพหน้างานพรีวิว">
+              <span class="absolute top-2 left-2 bg-black/70 text-white text-[10px] px-2 py-0.5 rounded-md">พรีวิวภาพหน้างาน</span>
+            </div>
+          }
+        </div>
+
+        <!-- Section 2: ภาพข้างใน (ภาพประกอบผลงาน / Gallery) -->
+        <div class="p-3.5 rounded-2xl bg-custom-subtle/60 border border-custom">
+          <div class="flex items-center justify-between mb-1">
+            <label class="block font-semibold text-custom-main">
+              📸 ภาพข้างใน (ภาพประกอบผลงาน / ภาพขั้นตอนเพิ่มเติม)
+            </label>
+            <span class="text-[11px] text-custom-muted font-num">({{ workGalleryImages.length }} รูป)</span>
+          </div>
+          <p class="text-[11px] text-custom-muted mb-2">เพิ่มรูปข้างในได้ไม่จำกัด (เลือกหลายไฟล์พร้อมกันจากเครื่อง หรือใส่ URL แล้วกดเพิ่ม)</p>
+
+          <!-- Add Image Inputs -->
+          <div class="flex flex-col sm:flex-row gap-2 mb-3">
+            <input type="text" [(ngModel)]="newInsideImageUrl" placeholder="ใส่ URL ภาพข้างใน..." class="flex-1 px-3 py-2 rounded-xl bg-custom-surface border border-custom text-custom-main text-xs">
+            <button type="button" (click)="addInsideImageUrl()" class="px-3.5 py-2 rounded-xl bg-custom-subtle border border-custom hover:border-custom-accent text-custom-main text-xs font-medium">
+              + เพิ่มจาก URL
+            </button>
+            <label class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer text-xs font-medium flex items-center justify-center gap-1">
+              📁 อัปโหลดหลายรูป
+              <input type="file" accept="image/*" multiple class="hidden" (change)="handleInsideImagesUpload($event)">
+            </label>
+          </div>
+
+          <!-- Gallery Thumbnails Preview List -->
+          @if (workGalleryImages.length > 0) {
+            <div class="grid grid-cols-3 sm:grid-cols-4 gap-2 pt-2 border-t border-custom">
+              @for (img of workGalleryImages; track $index) {
+                <div class="relative group rounded-xl overflow-hidden border border-custom h-20 bg-black/10">
+                  <img [src]="img" class="w-full h-full object-cover" [alt]="'รูปข้างใน ' + ($index + 1)">
+                  <span class="absolute bottom-1 left-1 bg-black/70 text-white text-[9px] px-1.5 py-0.5 rounded">
+                    #{{ $index + 1 }}
+                  </span>
+                  <button type="button" (click)="removeInsideImage($index)"
+                    title="ลบรูปนี้"
+                    class="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-600/90 hover:bg-red-700 text-white text-xs flex items-center justify-center shadow">
+                    ✕
+                  </button>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="text-center py-3 text-xs text-custom-muted border border-dashed border-custom rounded-xl">
+              ยังไม่มีภาพข้างใน (สามารถกด "อัปโหลดหลายรูป" หรือใส่ URL ได้เลย)
+            </div>
+          }
+        </div>
+
+        <div>
+          <label class="block font-medium text-custom-main mb-1">คำอธิบายรายละเอียดผลงาน</label>
+          <textarea [(ngModel)]="workForm.description" rows="3" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main"></textarea>
+        </div>
+
+        <div>
+          <label class="block font-medium text-custom-main mb-1">แท็ก (คั่นด้วยจุลภาค , )</label>
+          <input type="text" [(ngModel)]="workForm.tags" placeholder="HTML, Active Learning" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main">
+        </div>
+
+        <div class="pt-4 border-t border-custom flex justify-end space-x-2">
+          <button (click)="closeWorkModal()" class="px-4 py-2 rounded-xl border border-custom text-custom-muted hover:bg-custom-subtle">ยกเลิก</button>
+          <button (click)="saveWork()" class="px-5 py-2 rounded-xl bg-custom-accent text-white font-semibold hover:opacity-90">บันทึกผลงาน</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+
+<!-- =========================================================================
+     6. MODAL: เพิ่ม/แก้ไขรายวิชา (Course Edit Modal)
+     ========================================================================= -->
+@if (showCourseModal) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center modal-backdrop p-4 overflow-y-auto">
+    <div class="bg-custom-surface border border-custom rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative my-8">
+      <div class="flex items-center justify-between pb-4 border-b border-custom mb-6">
+        <h3 class="text-lg font-heading font-bold text-custom-main">
+          {{ courseForm.id ? 'แก้ไขรายวิชาการสอน' : 'เพิ่มรายวิชาการสอนใหม่' }}
+        </h3>
+        <button (click)="closeCourseModal()" class="text-custom-muted hover:text-custom-main">✕</button>
+      </div>
+
+      <div class="space-y-4 text-xs sm:text-sm">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-custom-main mb-1">รหัสวิชา</label>
+            <input type="text" [(ngModel)]="courseForm.code" placeholder="เช่น ว21103" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main font-num">
+          </div>
+          <div>
+            <label class="block font-medium text-custom-main mb-1">ชื่อวิชา</label>
+            <input type="text" [(ngModel)]="courseForm.name" placeholder="เช่น วิทยาการคำนวณ" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-custom-main mb-1">ระดับชั้น</label>
+            <input type="text" [(ngModel)]="courseForm.level" placeholder="เช่น ชั้น ม.1" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main">
+          </div>
+          <div>
+            <label class="block font-medium text-custom-main mb-1">ภาคเรียน</label>
+            <input type="text" [(ngModel)]="courseForm.semester" placeholder="เช่น ภาคเรียนที่ 1" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-medium text-custom-main mb-1">หน่วยกิต / คาบเรียน</label>
+          <input type="text" [(ngModel)]="courseForm.credits" placeholder="เช่น 1.0 หน่วยกิต (2 คาบ/สัปดาห์)" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main">
+        </div>
+
+        <div>
+          <label class="block font-medium text-custom-main mb-1">คำอธิบายรายวิชา</label>
+          <textarea [(ngModel)]="courseForm.description" rows="3" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main"></textarea>
+        </div>
+
+        <div class="pt-4 border-t border-custom flex justify-end space-x-2">
+          <button (click)="closeCourseModal()" class="px-4 py-2 rounded-xl border border-custom text-custom-muted hover:bg-custom-subtle">ยกเลิก</button>
+          <button (click)="saveCourse()" class="px-5 py-2 rounded-xl bg-custom-accent text-white font-semibold hover:opacity-90">บันทึกรายวิชา</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+
+<!-- =========================================================================
+     7. MODAL: แก้ไขข้อมูลประวัตินักศึกษาและโครงงาน (Profile Edit Modal)
+     ========================================================================= -->
+@if (showTeacherModal) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center modal-backdrop p-4 overflow-y-auto">
+    <div class="bg-custom-surface border border-custom rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative my-8 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-4 border-b border-custom mb-6 sticky top-0 bg-custom-surface z-10">
+        <h3 class="text-lg font-heading font-bold text-custom-main">
+          แก้ไขข้อมูลประวัตินักศึกษา & โครงงาน (Student Profile)
+        </h3>
+        <button (click)="closeTeacherModal()" class="text-custom-muted hover:text-custom-main text-lg font-bold">✕</button>
+      </div>
+
+      <div class="space-y-4 text-xs sm:text-sm">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-custom-main mb-1">ชื่อที่แสดง</label>
+            <input type="text" [(ngModel)]="teacherForm.name" placeholder="นาย พุศิพงศ์ ราชรักษ์" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main">
+          </div>
+          <div>
+            <label class="block font-medium text-custom-main mb-1">ชื่อ-นามสกุล และรหัสประจำตัว</label>
+            <input type="text" [(ngModel)]="teacherForm.fullName" placeholder="นาย พุศิพงศ์ ราชรักษ์ (สทส2 เลขที่ 12)" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-custom-main mb-1">ระดับชั้น / กลุ่ม</label>
+            <input type="text" [(ngModel)]="teacherForm.position" placeholder="นักศึกษา ปวส.2 สทส2 เลขที่ 12 กลุ่ม 1" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main">
+          </div>
+          <div>
+            <label class="block font-medium text-custom-main mb-1">อาจารย์ผู้สอน / ที่ปรึกษา</label>
+            <input type="text" [(ngModel)]="teacherForm.instructor" placeholder="อาจารย์ผู้สอน: ครูอ๋อน" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-custom-main mb-1">สาขาวิชา และประเภทวิชา</label>
+            <input type="text" [(ngModel)]="teacherForm.department" placeholder="สาขาเทคโนโลยีสารสนเทศ ประเภทวิชาอุตสาหกรรมดิจิทัลและสารสนเทศ" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main">
+          </div>
+          <div>
+            <label class="block font-medium text-custom-main mb-1">สถานศึกษา / วิทยาลัย</label>
+            <input type="text" [(ngModel)]="teacherForm.school" placeholder="วิทยาลัยอาชีวศึกษา / วิทยาลัยเทคนิค (สังกัด สอศ.)" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-medium text-custom-main mb-1">รูปโปรไฟล์ (URL หรือเลือกรูปจากเครื่อง)</label>
+          <div class="flex gap-2">
+            <input type="text" [(ngModel)]="teacherForm.avatar" class="flex-1 px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main text-xs">
+            <label class="px-3 py-2 rounded-xl bg-custom-subtle border border-custom hover:border-custom-accent cursor-pointer text-xs flex items-center gap-1">
+              <span>📷</span> เลือกรูป
+              <input type="file" accept="image/*" class="hidden" (change)="handleImageUpload($event, 'teacher')">
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-medium text-custom-main mb-1">ปณิธานและเป้าหมายการเรียนรู้ (Passion / Goals)</label>
+          <input type="text" [(ngModel)]="teacherForm.teachingPhilosophy" placeholder="เช่น เรียนรู้ด้วยการลงมือปฏิบัติจริง..." class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main">
+        </div>
+
+        <div>
+          <label class="block font-medium text-custom-main mb-1">ประวัติย่อและจุดเน้นการพัฒนาซอฟต์แวร์</label>
+          <textarea [(ngModel)]="teacherForm.bio" rows="3" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main"></textarea>
+        </div>
+
+        <!-- ประวัติการศึกษา -->
+        <div class="p-3 rounded-2xl bg-custom-subtle border border-custom space-y-2">
+          <label class="block font-semibold text-custom-main text-xs uppercase tracking-wider">📚 ประวัติการศึกษา</label>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <input type="text" [(ngModel)]="teacherEdu1Degree" placeholder="วุฒิการศึกษา 1 (เช่น ปวส. เทคโนโลยีสารสนเทศ)" class="px-2.5 py-1.5 rounded-lg bg-custom-surface border border-custom text-custom-main text-xs">
+            <input type="text" [(ngModel)]="teacherEdu1Inst" placeholder="สถานศึกษา / แผนก" class="px-2.5 py-1.5 rounded-lg bg-custom-surface border border-custom text-custom-main text-xs">
+            <input type="text" [(ngModel)]="teacherEdu1Year" placeholder="ปี พ.ศ. (เช่น 2567)" class="px-2.5 py-1.5 rounded-lg bg-custom-surface border border-custom text-custom-main text-xs">
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <input type="text" [(ngModel)]="teacherEdu2Degree" placeholder="วุฒิการศึกษา 2 (เช่น ปวช. คอมพิวเตอร์)" class="px-2.5 py-1.5 rounded-lg bg-custom-surface border border-custom text-custom-main text-xs">
+            <input type="text" [(ngModel)]="teacherEdu2Inst" placeholder="สถานศึกษา / แผนก" class="px-2.5 py-1.5 rounded-lg bg-custom-surface border border-custom text-custom-main text-xs">
+            <input type="text" [(ngModel)]="teacherEdu2Year" placeholder="ปี พ.ศ. (เช่น 2565)" class="px-2.5 py-1.5 rounded-lg bg-custom-surface border border-custom text-custom-main text-xs">
+          </div>
+        </div>
+
+        <!-- ผลงานและทักษะความเชี่ยวชาญ -->
+        <div>
+          <label class="block font-medium text-custom-main mb-1">🏆 ทักษะและความเชี่ยวชาญ / ผลงานเด่น (1 บรรทัดต่อ 1 ข้อความ)</label>
+          <textarea [(ngModel)]="teacherAchievementsText" rows="3" placeholder="ระบุผลงานเด่น เช่น โครงงานโมบายแอป Flutter หรือการเชื่อมต่อ TiDB..." class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main font-mono text-xs"></textarea>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="block font-medium text-custom-main mb-1">อีเมล</label>
+            <input type="email" [(ngModel)]="teacherForm.email" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main text-xs">
+          </div>
+          <div>
+            <label class="block font-medium text-custom-main mb-1">เบอร์โทร</label>
+            <input type="text" [(ngModel)]="teacherForm.phone" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main font-num text-xs">
+          </div>
+          <div>
+            <label class="block font-medium text-custom-main mb-1">Line ID</label>
+            <input type="text" [(ngModel)]="teacherForm.lineId" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main text-xs">
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-custom flex justify-end space-x-2">
+          <button (click)="closeTeacherModal()" class="px-4 py-2 rounded-xl border border-custom text-custom-muted hover:bg-custom-subtle">ยกเลิก</button>
+          <button (click)="saveTeacher()" class="px-5 py-2 rounded-xl bg-custom-accent text-white font-semibold hover:opacity-90">บันทึกข้อมูลประวัติ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+
+<!-- =========================================================================
+     8. MODAL: เพิ่ม/แก้ไขเอกสารดาวน์โหลด (Download Edit Modal)
+     ========================================================================= -->
+@if (showDownloadModal) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center modal-backdrop p-4 overflow-y-auto">
+    <div class="bg-custom-surface border border-custom rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative my-8">
+      <div class="flex items-center justify-between pb-4 border-b border-custom mb-6">
+        <h3 class="text-lg font-heading font-bold text-custom-main">
+          {{ downloadForm.id ? 'แก้ไขเอกสารดาวน์โหลด' : 'เพิ่มเอกสารดาวน์โหลดใหม่' }}
+        </h3>
+        <button (click)="closeDownloadModal()" class="text-custom-muted hover:text-custom-main text-lg font-bold">✕</button>
+      </div>
+
+      <div class="space-y-4 text-xs sm:text-sm">
+        <div>
+          <label class="block font-medium text-custom-main mb-1">ชื่อเอกสาร / รายงาน</label>
+          <input type="text" [(ngModel)]="downloadForm.title" placeholder="เช่น เอกสารประมวลรายวิชา 31901-2009" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-custom-main mb-1">รายวิชา / สังกัด</label>
+            <input type="text" [(ngModel)]="downloadForm.course" placeholder="เช่น วิชา 31901-2009" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main">
+          </div>
+          <div>
+            <label class="block font-medium text-custom-main mb-1">รูปแบบไฟล์ (Format)</label>
+            <select [(ngModel)]="downloadForm.format" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main">
+              <option value="PDF">PDF</option>
+              <option value="DOCX">DOCX</option>
+              <option value="ZIP">ZIP</option>
+              <option value="LINK">LINK</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-custom-main mb-1">ขนาดไฟล์ (Size)</label>
+            <input type="text" [(ngModel)]="downloadForm.size" placeholder="เช่น 2.4 MB" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main">
+          </div>
+          <div>
+            <label class="block font-medium text-custom-main mb-1">URL / ลิงก์ดาวน์โหลด</label>
+            <input type="text" [(ngModel)]="downloadForm.url" placeholder="#" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main">
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-custom flex justify-end space-x-2">
+          <button (click)="closeDownloadModal()" class="px-4 py-2 rounded-xl border border-custom text-custom-muted hover:bg-custom-subtle">ยกเลิก</button>
+          <button (click)="saveDownload()" class="px-5 py-2 rounded-xl bg-custom-accent text-white font-semibold hover:opacity-90">บันทึกเอกสาร</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+
+<!-- =========================================================================
+     9. MODAL: เข้าสู่โหมดแก้ไขลับ (Secret Admin Authorization Modal)
+     ========================================================================= -->
+@if (showSecretModal) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center modal-backdrop p-4 overflow-y-auto">
+    <div class="bg-custom-surface border border-custom rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl relative my-8 animate-fadeIn">
+      <div class="flex items-center justify-between pb-4 border-b border-custom mb-5">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xl">
+            🔐
+          </div>
+          <div>
+            <h3 class="text-base sm:text-lg font-heading font-bold text-custom-main">
+              เข้าสู่โหมดแก้ไขลับ
+            </h3>
+            <p class="text-xs text-custom-muted">Secret Administrator Authorization</p>
+          </div>
+        </div>
+        <button (click)="closeSecretModal()" class="text-custom-muted hover:text-custom-main text-lg font-bold">✕</button>
+      </div>
+
+      <div class="space-y-4 text-xs sm:text-sm">
+        @if (portfolio.isSecretUrlDetected()) {
+          <div class="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-amber-800 dark:text-amber-300 text-xs flex items-center gap-2">
+            <span>✨</span>
+            <span>ตรวจพบรหัสลับตรงลิงก์: <strong>phuttiphongF</strong></span>
+          </div>
+        }
+
+        <div>
+          <label class="block font-medium text-custom-main mb-1">
+            รหัสลับตรงลิงก์ (Secret Key)
+          </label>
+          <input type="text" 
+                 [(ngModel)]="secretKeyInput" 
+                 placeholder="เช่น phuttiphongF" 
+                 class="w-full px-3.5 py-2.5 rounded-xl bg-custom-subtle border border-custom text-custom-main font-mono text-xs sm:text-sm focus:border-custom-accent outline-none">
+          <p class="text-[11px] text-custom-muted mt-1">รหัสลับใน URL คือ <code>phuttiphongF</code></p>
+        </div>
+
+        <div>
+          <label class="block font-medium text-custom-main mb-1">
+            รหัสผ่านเข้าใช้งาน (Passcode)
+          </label>
+          <input type="password" 
+                 [(ngModel)]="secretPinInput" 
+                 (keyup.enter)="submitSecretAuth()"
+                 placeholder="กรอกรหัสผ่าน 6 หลัก" 
+                 class="w-full px-3.5 py-2.5 rounded-xl bg-custom-subtle border border-custom text-custom-main font-mono text-xs sm:text-sm focus:border-custom-accent outline-none">
+          <p class="text-[11px] text-custom-muted mt-1">รหัสเข้าใช้งานคือ <code>119236</code></p>
+        </div>
+
+        @if (secretErrorMsg) {
+          <div class="p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 text-red-600 dark:text-red-400 text-xs flex items-center gap-2">
+            <span>⚠️</span>
+            <span>{{ secretErrorMsg }}</span>
+          </div>
+        }
+
+        <div class="pt-3 border-t border-custom flex justify-end space-x-2">
+          <button (click)="closeSecretModal()" class="px-4 py-2.5 rounded-xl border border-custom text-custom-muted hover:bg-custom-subtle transition-colors text-xs font-medium">
+            ยกเลิก
+          </button>
+          <button (click)="submitSecretAuth()" class="px-5 py-2.5 rounded-xl bg-custom-accent text-white font-semibold hover:opacity-90 shadow-md transition-all text-xs flex items-center gap-1.5">
+            <span>🔓</span> ยืนยันเข้าโหมดแก้ไข
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+
+<!-- =========================================================================
+     10. Toast Notification
+     ========================================================================= -->
+@if (isToastVisible) {
+  <div class="no-print fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-stone-900/95 dark:bg-white/95 text-white dark:text-stone-900 px-5 py-3 rounded-2xl shadow-xl flex items-center space-x-2.5 text-xs sm:text-sm font-medium transition-all duration-300">
+    <span>✓</span>
+    <span>{{ toastText }}</span>
+  </div>
+}
+
