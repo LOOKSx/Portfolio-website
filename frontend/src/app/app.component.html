@@ -15,9 +15,8 @@
         <span class="font-heading font-bold text-lg sm:text-xl text-custom-main tracking-tight block leading-tight group-hover:text-custom-accent transition-colors">
           พุศิพงศ์ ราชรักษ์
         </span>
-        <span class="text-xs text-custom-muted block flex items-center gap-1.5">
-          <span>ปวส.2 สทส2 | ครูผู้สอน: ครูอ๋อน</span>
-          <span class="inline-block w-2 h-2 rounded-full" [ngClass]="portfolio.isBackendOnline() ? 'bg-green-500' : 'bg-amber-500'" [title]="portfolio.databaseType()"></span>
+        <span class="text-xs text-custom-muted block">
+          ปวส.2 สทส2 | ครูผู้สอน: ครูอ๋อน
         </span>
       </div>
     </a>
@@ -30,14 +29,8 @@
       <a href="#contact-section" class="hover:text-custom-accent transition-colors py-2">ติดต่อ</a>
     </nav>
 
-    <!-- Controls (Backend / TiDB pill, Edit Mode, Theme, Print) -->
+    <!-- Controls (Edit Mode, Theme) -->
     <div class="flex items-center space-x-2 sm:space-x-3 no-print">
-      
-      <!-- Database status pill -->
-      <span class="hidden xl:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-custom-subtle border border-custom text-custom-muted">
-        <span class="w-2 h-2 rounded-full" [ngClass]="portfolio.isBackendOnline() ? 'bg-green-500' : 'bg-amber-500'"></span>
-        {{ portfolio.databaseType() }}
-      </span>
 
       <!-- Secret / Admin Controls (Visible ONLY after authenticated via secret key/link) -->
       @if (portfolio.isSecretAuthenticated()) {
@@ -200,57 +193,14 @@
             </p>
           </div>
 
-          <!-- Academic Bio -->
-          <p class="text-sm sm:text-base text-custom-muted leading-relaxed mb-6">
-            {{ teacher?.bio }}
-          </p>
-
           <!-- 4 Academic KPI Stats -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
             @for (stat of teacher?.stats; track stat.label) {
               <div class="p-4 rounded-xl border border-custom bg-custom-surface transition-all duration-200 hover:border-custom-accent">
                 <div class="text-2xl sm:text-3xl font-bold font-num text-custom-accent">{{ stat.value }}</div>
                 <div class="text-xs sm:text-sm font-medium text-custom-muted mt-1">{{ stat.label }} ({{ stat.unit }})</div>
               </div>
             }
-          </div>
-
-          <!-- Academic Background & Recognitions -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            
-            <!-- Education -->
-            <div class="p-5 rounded-2xl bg-custom-surface border border-custom">
-              <h4 class="text-xs font-bold uppercase tracking-wider text-custom-accent mb-3 flex items-center gap-1.5">
-                <span>📚</span> ประวัติการศึกษา (Education Background)
-              </h4>
-              <ul class="space-y-3">
-                @for (edu of teacher?.education; track edu.degree) {
-                  <li class="flex items-start space-x-3 text-sm">
-                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-custom-accent-soft text-custom-accent text-xs font-bold mt-0.5">✓</span>
-                    <div>
-                      <span class="font-semibold text-custom-main">{{ edu.degree }}</span>
-                      <div class="text-custom-muted text-xs">{{ edu.institution }} (ปี พ.ศ. {{ edu.year }})</div>
-                    </div>
-                  </li>
-                }
-              </ul>
-            </div>
-
-            <!-- Academic Achievements -->
-            <div class="p-5 rounded-2xl bg-custom-surface border border-custom">
-              <h4 class="text-xs font-bold uppercase tracking-wider text-custom-accent mb-3 flex items-center gap-1.5">
-                <span>🏆</span> ทักษะและความเชี่ยวชาญ (Skills & Honors)
-              </h4>
-              <ul class="space-y-3">
-                @for (achieve of teacher?.academicAchievements; track achieve) {
-                  <li class="flex items-start space-x-3 text-sm">
-                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 text-xs font-bold mt-0.5">★</span>
-                    <span class="text-custom-main">{{ achieve }}</span>
-                  </li>
-                }
-              </ul>
-            </div>
-
           </div>
 
         </div>
@@ -904,31 +854,6 @@
           <input type="text" [(ngModel)]="teacherForm.teachingPhilosophy" placeholder="เช่น เรียนรู้ด้วยการลงมือปฏิบัติจริง..." class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main">
         </div>
 
-        <div>
-          <label class="block font-medium text-custom-main mb-1">ประวัติย่อและจุดเน้นการพัฒนาซอฟต์แวร์</label>
-          <textarea [(ngModel)]="teacherForm.bio" rows="3" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main"></textarea>
-        </div>
-
-        <!-- ประวัติการศึกษา -->
-        <div class="p-3 rounded-2xl bg-custom-subtle border border-custom space-y-2">
-          <label class="block font-semibold text-custom-main text-xs uppercase tracking-wider">📚 ประวัติการศึกษา</label>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            <input type="text" [(ngModel)]="teacherEdu1Degree" placeholder="วุฒิการศึกษา 1 (เช่น ปวส. เทคโนโลยีสารสนเทศ)" class="px-2.5 py-1.5 rounded-lg bg-custom-surface border border-custom text-custom-main text-xs">
-            <input type="text" [(ngModel)]="teacherEdu1Inst" placeholder="สถานศึกษา / แผนก" class="px-2.5 py-1.5 rounded-lg bg-custom-surface border border-custom text-custom-main text-xs">
-            <input type="text" [(ngModel)]="teacherEdu1Year" placeholder="ปี พ.ศ. (เช่น 2567)" class="px-2.5 py-1.5 rounded-lg bg-custom-surface border border-custom text-custom-main text-xs">
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            <input type="text" [(ngModel)]="teacherEdu2Degree" placeholder="วุฒิการศึกษา 2 (เช่น ปวช. คอมพิวเตอร์)" class="px-2.5 py-1.5 rounded-lg bg-custom-surface border border-custom text-custom-main text-xs">
-            <input type="text" [(ngModel)]="teacherEdu2Inst" placeholder="สถานศึกษา / แผนก" class="px-2.5 py-1.5 rounded-lg bg-custom-surface border border-custom text-custom-main text-xs">
-            <input type="text" [(ngModel)]="teacherEdu2Year" placeholder="ปี พ.ศ. (เช่น 2565)" class="px-2.5 py-1.5 rounded-lg bg-custom-surface border border-custom text-custom-main text-xs">
-          </div>
-        </div>
-
-        <!-- ผลงานและทักษะความเชี่ยวชาญ -->
-        <div>
-          <label class="block font-medium text-custom-main mb-1">🏆 ทักษะและความเชี่ยวชาญ / ผลงานเด่น (1 บรรทัดต่อ 1 ข้อความ)</label>
-          <textarea [(ngModel)]="teacherAchievementsText" rows="3" placeholder="ระบุผลงานเด่น เช่น โครงงานโมบายแอป Flutter หรือการเชื่อมต่อ TiDB..." class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main font-mono text-xs"></textarea>
-        </div>
 
         <div class="grid grid-cols-3 gap-2">
           <div>
