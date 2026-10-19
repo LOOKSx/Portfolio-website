@@ -24,7 +24,6 @@
     <!-- Desktop Nav Links -->
     <nav class="hidden md:flex items-center space-x-6 text-sm font-medium text-custom-muted">
       <a href="#teacher-profile" class="hover:text-custom-accent transition-colors py-2">ประวัตินักศึกษา</a>
-      <a href="#courses-section" class="hover:text-custom-accent transition-colors py-2">รายวิชาที่เรียน</a>
       <a href="#portfolio-section" class="hover:text-custom-accent transition-colors py-2">ผลงานแอปพลิเคชัน</a>
       <a href="#contact-section" class="hover:text-custom-accent transition-colors py-2">ติดต่อ</a>
     </nav>
@@ -210,69 +209,6 @@
     </div>
   </section>
 
-  <!-- -----------------------------------------------------------------------
-       SECTION 2: รายวิชาในหลักสูตรที่ศึกษา (Curriculum Courses)
-       ----------------------------------------------------------------------- -->
-  <section id="courses-section" class="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 border-b border-custom bg-custom-subtle/50 transition-colors">
-    <div class="max-w-7xl mx-auto">
-      
-      <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
-        <div>
-          <span class="text-xs font-bold uppercase tracking-wider text-custom-accent flex items-center gap-1 mb-1">
-            <span>📖</span> Curriculum & Courses
-          </span>
-          <h2 class="text-2xl sm:text-3xl font-heading font-bold text-custom-main">
-            รายวิชาในหลักสูตรที่ศึกษา
-          </h2>
-          <p class="text-xs sm:text-sm text-custom-muted mt-1">
-            รายวิชาหลัก: 31901-2009 การพัฒนาซอฟต์แวร์สำหรับอุปกรณ์เคลื่อนที่ (อาจารย์ผู้สอน: ครูอ๋อน)
-          </p>
-        </div>
-
-        @if (portfolio.isEditMode()) {
-          <button (click)="openNewCourseModal()" class="px-4 py-2.5 rounded-xl bg-custom-accent text-white text-xs sm:text-sm font-semibold hover:opacity-90 shadow-sm transition-all flex items-center gap-2 self-start md:self-auto">
-            + เพิ่มรายวิชาใหม่
-          </button>
-        }
-      </div>
-
-      <!-- Course Card (Single Primary Subject: 31901-2009) -->
-      <div class="max-w-3xl mx-auto">
-        @for (course of courses; track course.id) {
-          <div class="relative bg-custom-surface border border-custom rounded-3xl p-6 sm:p-8 transition-all duration-300 shadow-sm hover:shadow-hover group">
-            
-            @if (portfolio.isEditMode()) {
-              <div class="absolute top-5 right-5 flex space-x-1.5 z-10">
-                <button (click)="openEditCourseModal(course)" class="p-2 rounded-xl bg-custom-accent-soft text-custom-accent hover:bg-custom-accent hover:text-white transition-colors" title="แก้ไขวิชา">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                </button>
-              </div>
-            }
-
-            <div class="flex flex-wrap items-center gap-2.5 mb-4">
-              <span class="px-3.5 py-1.5 text-sm font-bold rounded-xl bg-custom-accent text-white font-num tracking-wide">{{ course.code }}</span>
-              <span class="text-xs px-3 py-1 rounded-full bg-custom-subtle text-custom-main font-semibold">{{ course.semester }}</span>
-              <span class="text-xs px-3 py-1 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 font-semibold">{{ course.credits }}</span>
-            </div>
-
-            <h3 class="text-xl sm:text-2xl font-heading font-bold text-custom-main group-hover:text-custom-accent transition-colors mb-2">{{ course.name }}</h3>
-            <p class="text-xs sm:text-sm font-medium text-custom-accent mb-3">ระดับการศึกษา: {{ course.level }} (อาจารย์ผู้สอน: ครูอ๋อน)</p>
-            <p class="text-xs sm:text-sm text-custom-muted mb-6 leading-relaxed">{{ course.description }}</p>
-
-            <div class="pt-4 border-t border-custom flex items-center justify-between">
-              <span class="text-xs sm:text-sm text-custom-muted flex items-center gap-1.5 font-medium">
-                ผลงานทั้งหมดในรายวิชานี้: <strong class="text-custom-main font-num text-base font-bold">{{ works.length }}</strong> ชิ้นงาน
-              </span>
-              <a href="#portfolio-section" class="text-xs sm:text-sm font-semibold text-custom-accent hover:underline flex items-center gap-1">
-                ไปที่คลังผลงานด้านล่าง ↓
-              </a>
-            </div>
-          </div>
-        }
-      </div>
-
-    </div>
-  </section>
 
 
   <!-- -----------------------------------------------------------------------
@@ -735,60 +671,7 @@
 }
 
 
-<!-- =========================================================================
-     6. MODAL: เพิ่ม/แก้ไขรายวิชา (Course Edit Modal)
-     ========================================================================= -->
-@if (showCourseModal) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center modal-backdrop p-4 overflow-y-auto">
-    <div class="bg-custom-surface border border-custom rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative my-8">
-      <div class="flex items-center justify-between pb-4 border-b border-custom mb-6">
-        <h3 class="text-lg font-heading font-bold text-custom-main">
-          {{ courseForm.id ? 'แก้ไขรายวิชาการสอน' : 'เพิ่มรายวิชาการสอนใหม่' }}
-        </h3>
-        <button (click)="closeCourseModal()" class="text-custom-muted hover:text-custom-main">✕</button>
-      </div>
 
-      <div class="space-y-4 text-xs sm:text-sm">
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block font-medium text-custom-main mb-1">รหัสวิชา</label>
-            <input type="text" [(ngModel)]="courseForm.code" placeholder="เช่น ว21103" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main font-num">
-          </div>
-          <div>
-            <label class="block font-medium text-custom-main mb-1">ชื่อวิชา</label>
-            <input type="text" [(ngModel)]="courseForm.name" placeholder="เช่น วิทยาการคำนวณ" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main">
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block font-medium text-custom-main mb-1">ระดับชั้น</label>
-            <input type="text" [(ngModel)]="courseForm.level" placeholder="เช่น ชั้น ม.1" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main">
-          </div>
-          <div>
-            <label class="block font-medium text-custom-main mb-1">ภาคเรียน</label>
-            <input type="text" [(ngModel)]="courseForm.semester" placeholder="เช่น ภาคเรียนที่ 1" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main">
-          </div>
-        </div>
-
-        <div>
-          <label class="block font-medium text-custom-main mb-1">หน่วยกิต / คาบเรียน</label>
-          <input type="text" [(ngModel)]="courseForm.credits" placeholder="เช่น 1.0 หน่วยกิต (2 คาบ/สัปดาห์)" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main">
-        </div>
-
-        <div>
-          <label class="block font-medium text-custom-main mb-1">คำอธิบายรายวิชา</label>
-          <textarea [(ngModel)]="courseForm.description" rows="3" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main"></textarea>
-        </div>
-
-        <div class="pt-4 border-t border-custom flex justify-end space-x-2">
-          <button (click)="closeCourseModal()" class="px-4 py-2 rounded-xl border border-custom text-custom-muted hover:bg-custom-subtle">ยกเลิก</button>
-          <button (click)="saveCourse()" class="px-5 py-2 rounded-xl bg-custom-accent text-white font-semibold hover:opacity-90">บันทึกรายวิชา</button>
-        </div>
-      </div>
-    </div>
-  </div>
-}
 
 
 <!-- =========================================================================
