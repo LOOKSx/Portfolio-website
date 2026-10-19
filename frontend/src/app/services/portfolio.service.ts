@@ -258,18 +258,16 @@ export class PortfolioService {
       this.isEditMode.set(true);
     }
 
-    // Inspect URL for secret parameter
+    // Inspect URL for secret parameter (supports /phuttiphongF, ?secret=phuttiphongF, etc.)
     if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const hasSecret = params.get('secret') === this.SECRET_KEY || 
-                        params.get('key') === this.SECRET_KEY || 
-                        params.has(this.SECRET_KEY) || 
-                        window.location.hash.includes(this.SECRET_KEY);
+      const fullHref = window.location.href.toLowerCase();
+      const secretKeyLower = this.SECRET_KEY.toLowerCase();
+      const hasSecret = fullHref.includes(secretKeyLower);
 
       if (hasSecret) {
         this.isSecretUrlDetected.set(true);
-        // If PIN is also in URL (e.g. ?secret=phuttiphongF&pin=119236)
-        if (params.get('pin') === this.SECRET_PIN) {
+        // If PIN is also in URL (e.g. /phuttiphongF/119236 or ?secret=phuttiphongF&pin=119236)
+        if (window.location.href.includes(this.SECRET_PIN)) {
           this.authenticate(this.SECRET_KEY, this.SECRET_PIN);
         }
       }

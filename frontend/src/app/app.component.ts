@@ -66,9 +66,11 @@ export class AppComponent implements OnInit {
   ngOnInit(): void {
     this.loadAllData();
 
-    // Check if secret link was detected in URL (e.g. ?secret=phuttiphongF)
+    // Check if secret link was detected in URL (e.g. /phuttiphongF or ?secret=phuttiphongF)
     if (this.portfolio.isSecretUrlDetected() && !this.portfolio.isSecretAuthenticated()) {
-      this.openSecretModal();
+      setTimeout(() => {
+        this.openSecretModal();
+      }, 100);
     }
   }
 
