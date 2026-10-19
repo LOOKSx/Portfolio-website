@@ -32,6 +32,10 @@ export class PortfolioService {
   public isSecretUrlDetected = signal<boolean>(false);
   public isBackendOnline = signal<boolean>(false);
   public databaseType = signal<string>('TiDB Cloud');
+  public isSaving = signal<boolean>(false);
+  public lastSaveStatus = signal<string>('พร้อมใช้งาน');
+  public lastSavedAt = signal<string>('');
+  public lastVerifiedScore = signal<number>(100);
 
   // Secret Credentials as specified by user
   public readonly SECRET_KEY = 'phuttiphongF';
@@ -272,6 +276,7 @@ export class PortfolioService {
   }
 
   updateTeacher(teacher: Teacher): Observable<Teacher> {
+    this.isSaving.set(true);
     this.setCache('kruaon_tidb_teacher', teacher);
     this.fallbackTeacher = { ...teacher };
 
@@ -279,9 +284,17 @@ export class PortfolioService {
       map(t => {
         const parsed = this.parseTeacherData(t);
         this.setCache('kruaon_tidb_teacher', parsed);
+        this.isSaving.set(false);
+        this.lastSaveStatus.set('ซิงก์เข้า TiDB Cloud สำเร็จ 100%');
+        this.lastSavedAt.set(new Date().toLocaleTimeString('th-TH'));
         return parsed;
       }),
-      catchError(() => of(teacher))
+      catchError(() => {
+        this.isSaving.set(false);
+        this.lastSaveStatus.set('บันทึกใน Local Cache เรียบร้อย');
+        this.lastSavedAt.set(new Date().toLocaleTimeString('th-TH'));
+        return of(teacher);
+      })
     );
   }
 
@@ -419,35 +432,70 @@ export class PortfolioService {
   }
 
   createWork(work: Work): Observable<Work> {
+    this.isSaving.set(true);
     return this.http.post<Work>(`${this.apiUrl}/works`, work).pipe(
       map(w => this.enrichWork(w)),
       tap(saved => {
         this.fallbackWorks.unshift(saved);
         this.setCache('kruaon_tidb_works', this.fallbackWorks);
+        this.isSaving.set(false);
+        this.lastSaveStatus.set('ซิงก์เข้า TiDB Cloud สำเร็จ 100%');
+        this.lastSavedAt.set(new Date().toLocaleTimeString('th-TH'));
       }),
       catchError(() => {
         const enriched = this.enrichWork(work);
         this.fallbackWorks.unshift(enriched);
         this.setCache('kruaon_tidb_works', this.fallbackWorks);
+        this.isSaving.set(false);
+        this.lastSaveStatus.set('บันทึกใน Local Cache เรียบร้อย');
+        this.lastSavedAt.set(new Date().toLocaleTimeString('th-TH'));
         return of(enriched);
       })
     );
   }
 
   updateWork(id: string, work: Work): Observable<Work> {
+    this.isSaving.set(true);
     return this.http.put<Work>(`${this.apiUrl}/works/${id}`, work).pipe(
       map(w => this.enrichWork(w)),
       tap(saved => {
         const idx = this.fallbackWorks.findIndex(w => w.id === id);
         if (idx !== -1) this.fallbackWorks[idx] = { ...saved };
         this.setCache('kruaon_tidb_works', this.fallbackWorks);
+        this.isSaving.set(false);
+        this.lastSaveStatus.set('ซิงก์เข้า TiDB Cloud สำเร็จ 100%');
+        this.lastSavedAt.set(new Date().toLocaleTimeString('th-TH'));
       }),
       catchError(() => {
         const enriched = this.enrichWork(work);
         const idx = this.fallbackWorks.findIndex(w => w.id === id);
         if (idx !== -1) this.fallbackWorks[idx] = { ...enriched };
         this.setCache('kruaon_tidb_works', this.fallbackWorks);
+        this.isSaving.set(false);
+        this.lastSaveStatus.set('บันทึกใน Local Cache เรียบร้อย');
+        this.lastSavedAt.set(new Date().toLocaleTimeString('th-TH'));
         return of(enriched);
+      })
+    );
+  }
+
+  // --- Live TiDB Cloud Diagnostic Check (100% Verification) ---
+  runDatabaseDiagnostic(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/diagnostic`).pipe(
+      tap(res => {
+        if (res && res.score !== undefined) {
+          this.lastVerifiedScore.set(res.score);
+        }
+      }),
+      catchError(err => {
+        return of({
+          status: 'error',
+          score: 0,
+          operationalPercent: '0%',
+          grade: 'ไม่สามารถเชื่อมต่อได้',
+          error: err.message || 'Network error',
+          checks: []
+        });
       })
     );
   }
