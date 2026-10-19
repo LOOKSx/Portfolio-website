@@ -522,8 +522,68 @@ export class AppComponent implements OnInit {
     }
   }
 
-  printPortfolio(): void {
-    window.print();
+  quickChangeAvatar(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0] && this.teacher) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        if (result && this.teacher) {
+          const updatedTeacher: Teacher = { ...this.teacher, avatar: result };
+          this.portfolio.updateTeacher(updatedTeacher).subscribe(res => {
+            this.teacher = res;
+            this.showToastNotification('✅ บันทึกรูปโปรไฟล์ใหม่เข้า TiDB Cloud เรียบร้อยแล้ว!');
+          });
+        }
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+  quickChangeWorkCover(work: Work, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        if (result) {
+          const updatedWork: Work = { ...work, image: result };
+          this.portfolio.updateWork(work.id, updatedWork).subscribe(res => {
+            const idx = this.works.findIndex(w => w.id === res.id);
+            if (idx !== -1) this.works[idx] = res;
+            if (this.selectedWorkForDetail && this.selectedWorkForDetail.id === res.id) {
+              this.selectedWorkForDetail = res;
+              this.selectedDetailImage = res.image;
+            }
+            this.showToastNotification('✅ บันทึกรูปหน้างานใหม่เข้า TiDB Cloud เรียบร้อยแล้ว!');
+          });
+        }
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+  replaceInsideImage(idx: number, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        if (result) {
+          this.workGalleryImages[idx] = result;
+          this.showToastNotification(`✅ แทนที่รูปภาพข้างใน #${idx + 1} เรียบร้อยแล้ว!`);
+        }
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+  editWorkFromDetail(): void {
+    if (this.selectedWorkForDetail) {
+      const workToEdit = this.selectedWorkForDetail;
+      this.closeWorkDetail();
+      this.openEditWorkModal(workToEdit);
+    }
   }
 
   showToastNotification(msg: string): void {

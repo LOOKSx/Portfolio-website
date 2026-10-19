@@ -92,16 +92,6 @@
         }
       </button>
 
-      <!-- Print Button -->
-      <button (click)="printPortfolio()" 
-              class="p-2 sm:px-3 sm:py-2 rounded-xl border border-custom bg-custom-subtle text-custom-main text-xs sm:text-sm font-medium hover:border-custom-accent transition-all flex items-center gap-1.5"
-              title="พิมพ์หรือบันทึกเป็น PDF">
-        <svg class="w-4 h-4 text-custom-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
-        </svg>
-        <span class="hidden xl:inline text-xs">พิมพ์ / PDF</span>
-      </button>
-
     </div>
   </div>
 </header>
@@ -153,10 +143,18 @@
         <!-- Profile Column 1: Avatar & Identity (4 Cols) -->
         <div class="lg:col-span-4 flex flex-col items-center text-center lg:text-left lg:items-start">
           <div class="relative group">
-            <div class="w-48 h-48 sm:w-56 sm:h-56 rounded-3xl overflow-hidden p-1.5 bg-gradient-to-tr from-amber-700/30 to-amber-200/50 dark:from-amber-600/30 dark:to-stone-700/50 shadow-card">
+            <div class="w-48 h-48 sm:w-56 sm:h-56 rounded-3xl overflow-hidden p-1.5 bg-gradient-to-tr from-amber-700/30 to-amber-200/50 dark:from-amber-600/30 dark:to-stone-700/50 shadow-card relative">
               <img [src]="teacher?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=600&auto=format&fit=crop'" 
                    [alt]="teacher?.name" 
                    class="w-full h-full object-cover rounded-[22px] transition-transform duration-500 group-hover:scale-105">
+              @if (portfolio.isEditMode()) {
+                <label class="absolute inset-0 bg-black/60 backdrop-blur-[2px] rounded-[22px] flex flex-col items-center justify-center text-white cursor-pointer opacity-90 sm:opacity-0 group-hover:opacity-100 transition-all z-10" title="คลิกเพื่อเปลี่ยนรูปโปรไฟล์ (บันทึกเข้า TiDB Cloud ทันที)">
+                  <span class="text-3xl mb-1">📷</span>
+                  <span class="text-xs font-bold bg-amber-600 px-3 py-1 rounded-lg shadow">เปลี่ยนรูปโปรไฟล์</span>
+                  <span class="text-[10px] text-stone-200 mt-1 font-mono">บันทึกเข้า TiDB Cloud</span>
+                  <input type="file" accept="image/*" class="hidden" (change)="quickChangeAvatar($event)">
+                </label>
+              }
             </div>
 
             <div class="absolute -bottom-3 right-2 sm:right-4 px-3 py-1 rounded-full bg-custom-surface border border-custom shadow-md flex items-center gap-1.5 text-xs font-semibold text-custom-accent">
@@ -434,6 +432,12 @@
                   {{ w.categoryLabel || 'ผลงาน' }}
                 </span>
               </div>
+              @if (portfolio.isEditMode()) {
+                <label (click)="$event.stopPropagation()" class="absolute bottom-2 left-2 px-2.5 py-1 rounded-lg text-[11px] bg-amber-600/90 hover:bg-amber-700 text-white font-medium backdrop-blur-sm cursor-pointer shadow flex items-center gap-1 z-20" title="เปลี่ยนรูปหน้างานนี้ (บันทึกเข้า TiDB Cloud ทันที)">
+                  <span>📷</span> เปลี่ยนรูปหน้างาน
+                  <input type="file" accept="image/*" class="hidden" (change)="quickChangeWorkCover(w, $event)">
+                </label>
+              }
               <span class="absolute bottom-2 right-2 px-2 py-0.5 rounded text-[11px] bg-black/60 text-white backdrop-blur-sm">
                 {{ w.date }}
               </span>
@@ -621,11 +625,20 @@
           }
         </div>
 
-        <div class="pt-4 border-t border-custom flex items-center justify-end space-x-3">
-          <button (click)="closeWorkDetail()" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-medium border border-custom hover:bg-custom-subtle text-custom-muted">ปิด</button>
-          <a [href]="selectedWorkForDetail.link" target="_blank" class="px-5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-custom-accent text-white hover:opacity-90">
-            {{ selectedWorkForDetail.downloadText }}
-          </a>
+        <div class="pt-4 border-t border-custom flex items-center justify-between">
+          <div>
+            @if (portfolio.isEditMode()) {
+              <button (click)="editWorkFromDetail()" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-amber-600 hover:bg-amber-700 text-white flex items-center gap-1.5 shadow">
+                <span>✏️</span> แก้ไขผลงานและรูปภาพ
+              </button>
+            }
+          </div>
+          <div class="flex items-center space-x-2">
+            <button (click)="closeWorkDetail()" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-medium border border-custom hover:bg-custom-subtle text-custom-muted">ปิด</button>
+            <a [href]="selectedWorkForDetail.link" target="_blank" class="px-5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-custom-accent text-white hover:opacity-90">
+              {{ selectedWorkForDetail.downloadText }}
+            </a>
+          </div>
         </div>
       </div>
     </div>
@@ -734,6 +747,10 @@
                   <span class="absolute bottom-1 left-1 bg-black/70 text-white text-[9px] px-1.5 py-0.5 rounded">
                     #{{ $index + 1 }}
                   </span>
+                  <label class="absolute top-1 left-1 w-6 h-6 rounded-full bg-amber-600/90 hover:bg-amber-700 text-white text-[10px] flex items-center justify-center shadow cursor-pointer" title="คลิกเพื่อเลือกรูปใหม่แทนที่รูปนี้">
+                    📷
+                    <input type="file" accept="image/*" class="hidden" (change)="replaceInsideImage($index, $event)">
+                  </label>
                   <button type="button" (click)="removeInsideImage($index)"
                     title="ลบรูปนี้"
                     class="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-600/90 hover:bg-red-700 text-white text-xs flex items-center justify-center shadow">

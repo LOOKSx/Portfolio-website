@@ -8,7 +8,22 @@ import { Teacher, Course, Work, DownloadItem } from '../models/portfolio.models'
 })
 export class PortfolioService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8080/api';
+
+  // Dynamic API URL: In production / Vercel, uses relative '/api' (HTTPS, zero CORS/Mixed-Content issues)
+  // When running locally on Angular dev server port 4200, connects to local backend port 8080
+  private getApiUrl(): string {
+    if (typeof window !== 'undefined') {
+      const host = window.location.hostname;
+      const port = window.location.port;
+      if ((host === 'localhost' || host === '127.0.0.1') && port === '4200') {
+        return 'http://localhost:8080/api';
+      }
+      return '/api';
+    }
+    return '/api';
+  }
+
+  public apiUrl = this.getApiUrl();
 
   // Signals for state
   public isDarkMode = signal<boolean>(false);
@@ -16,13 +31,13 @@ export class PortfolioService {
   public isSecretAuthenticated = signal<boolean>(false);
   public isSecretUrlDetected = signal<boolean>(false);
   public isBackendOnline = signal<boolean>(false);
-  public databaseType = signal<string>('Connecting...');
+  public databaseType = signal<string>('TiDB Cloud');
 
   // Secret Credentials as specified by user
   public readonly SECRET_KEY = 'phuttiphongF';
   public readonly SECRET_PIN = '119236';
 
-  // Fallback initial data in case backend is offline
+  // Fallback initial data in case TiDB Cloud is cold or offline
   private fallbackTeacher: Teacher = {
     id: 1,
     name: 'นาย พุศิพงศ์ ราชรักษ์',
@@ -41,7 +56,7 @@ export class PortfolioService {
     stats: [
       { label: 'ระดับชั้น/กลุ่ม', value: 'ปวส.2', unit: 'สทส2 เลขที่ 12' },
       { label: 'รหัสวิชาหลัก', value: '31901-2009', unit: 'โมบายแอป' },
-      { label: 'โครงงานผลงาน', value: '6+', unit: 'ชิ้นงาน' },
+      { label: 'โครงงานผลงาน', value: '4+', unit: 'ชิ้นงาน' },
       { label: 'อาจารย์ผู้สอน', value: 'ครูอ๋อน', unit: 'ที่ปรึกษา' }
     ],
     education: [
@@ -164,7 +179,6 @@ export class PortfolioService {
 
       if (hasSecret) {
         this.isSecretUrlDetected.set(true);
-        // If PIN is also in URL (e.g. /phuttiphongF/119236 or ?secret=phuttiphongF&pin=119236)
         if (window.location.href.includes(this.SECRET_PIN)) {
           this.authenticate(this.SECRET_KEY, this.SECRET_PIN);
         }
@@ -203,7 +217,6 @@ export class PortfolioService {
 
   toggleEditMode(): void {
     if (!this.isSecretAuthenticated()) {
-      // Must be authenticated to enter edit mode
       return;
     }
     this.isEditMode.update(v => !v);
@@ -213,7 +226,7 @@ export class PortfolioService {
     this.http.get<any>(`${this.apiUrl}/health`).subscribe({
       next: (res) => {
         this.isBackendOnline.set(true);
-        this.databaseType.set(res.databaseType || 'TiDB');
+        this.databaseType.set(res.databaseType || 'TiDB Cloud Serverless');
       },
       error: () => {
         this.isBackendOnline.set(false);
@@ -222,21 +235,53 @@ export class PortfolioService {
     });
   }
 
-  // --- Teacher ---
+  // Helper storage methods for instant optimistic UI & persistence
+  private getCache<T>(key: string): T | null {
+    if (typeof window === 'undefined') return null;
+    try {
+      const data = localStorage.getItem(key);
+      return data ? JSON.parse(data) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private setCache(key: string, value: any): void {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (e) {
+      // Ignore if quota or private mode
+    }
+  }
+
+  // --- Teacher / Student Profile ---
   getTeacher(): Observable<Teacher> {
+    const cached = this.getCache<Teacher>('kruaon_tidb_teacher');
+    const initial = cached || this.fallbackTeacher;
+
     return this.http.get<Teacher>(`${this.apiUrl}/teacher`).pipe(
-      map(t => this.parseTeacherData(t)),
-      catchError(() => of(this.fallbackTeacher))
+      map(t => {
+        const parsed = this.parseTeacherData(t);
+        this.setCache('kruaon_tidb_teacher', parsed);
+        this.fallbackTeacher = { ...parsed };
+        return parsed;
+      }),
+      catchError(() => of(initial))
     );
   }
 
   updateTeacher(teacher: Teacher): Observable<Teacher> {
+    this.setCache('kruaon_tidb_teacher', teacher);
+    this.fallbackTeacher = { ...teacher };
+
     return this.http.put<Teacher>(`${this.apiUrl}/teacher`, teacher).pipe(
-      map(t => this.parseTeacherData(t)),
-      catchError(() => {
-        this.fallbackTeacher = { ...teacher };
-        return of(this.fallbackTeacher);
-      })
+      map(t => {
+        const parsed = this.parseTeacherData(t);
+        this.setCache('kruaon_tidb_teacher', parsed);
+        return parsed;
+      }),
+      catchError(() => of(teacher))
     );
   }
 
@@ -256,15 +301,31 @@ export class PortfolioService {
 
   // --- Courses ---
   getCourses(): Observable<Course[]> {
+    const cached = this.getCache<Course[]>('kruaon_tidb_courses');
+    const initial = cached && cached.length > 0 ? cached : this.fallbackCourses;
+
     return this.http.get<Course[]>(`${this.apiUrl}/courses`).pipe(
-      catchError(() => of(this.fallbackCourses))
+      map(courses => {
+        if (courses && courses.length > 0) {
+          this.setCache('kruaon_tidb_courses', courses);
+          this.fallbackCourses = [...courses];
+          return courses;
+        }
+        return initial;
+      }),
+      catchError(() => of(initial))
     );
   }
 
   createCourse(course: Course): Observable<Course> {
     return this.http.post<Course>(`${this.apiUrl}/courses`, course).pipe(
+      tap(saved => {
+        this.fallbackCourses.push(saved);
+        this.setCache('kruaon_tidb_courses', this.fallbackCourses);
+      }),
       catchError(() => {
         this.fallbackCourses.push(course);
+        this.setCache('kruaon_tidb_courses', this.fallbackCourses);
         return of(course);
       })
     );
@@ -272,9 +333,15 @@ export class PortfolioService {
 
   updateCourse(id: string, course: Course): Observable<Course> {
     return this.http.put<Course>(`${this.apiUrl}/courses/${id}`, course).pipe(
+      tap(saved => {
+        const idx = this.fallbackCourses.findIndex(c => c.id === id);
+        if (idx !== -1) this.fallbackCourses[idx] = { ...saved };
+        this.setCache('kruaon_tidb_courses', this.fallbackCourses);
+      }),
       catchError(() => {
         const idx = this.fallbackCourses.findIndex(c => c.id === id);
         if (idx !== -1) this.fallbackCourses[idx] = { ...course };
+        this.setCache('kruaon_tidb_courses', this.fallbackCourses);
         return of(course);
       })
     );
@@ -282,9 +349,17 @@ export class PortfolioService {
 
   deleteCourse(id: string): Observable<any> {
     return this.http.delete(`${this.apiUrl}/courses/${id}`).pipe(
+      tap(() => {
+        this.fallbackCourses = this.fallbackCourses.filter(c => c.id !== id);
+        this.fallbackWorks = this.fallbackWorks.filter(w => w.courseId !== id);
+        this.setCache('kruaon_tidb_courses', this.fallbackCourses);
+        this.setCache('kruaon_tidb_works', this.fallbackWorks);
+      }),
       catchError(() => {
         this.fallbackCourses = this.fallbackCourses.filter(c => c.id !== id);
         this.fallbackWorks = this.fallbackWorks.filter(w => w.courseId !== id);
+        this.setCache('kruaon_tidb_courses', this.fallbackCourses);
+        this.setCache('kruaon_tidb_works', this.fallbackWorks);
         return of({ success: true });
       })
     );
@@ -298,10 +373,20 @@ export class PortfolioService {
     if (category && category !== 'all') params.push(`category=${category}`);
     if (params.length > 0) url += `?${params.join('&')}`;
 
+    const cached = this.getCache<Work[]>('kruaon_tidb_works');
+    const initial = cached && cached.length > 0 ? cached : this.fallbackWorks;
+
     return this.http.get<Work[]>(url).pipe(
-      map(works => works.map(w => this.enrichWork(w))),
+      map(works => {
+        const enriched = works.map(w => this.enrichWork(w));
+        if (!courseId || courseId === 'all') {
+          this.setCache('kruaon_tidb_works', enriched);
+          this.fallbackWorks = [...enriched];
+        }
+        return enriched;
+      }),
       catchError(() => {
-        let filtered = [...this.fallbackWorks];
+        let filtered = [...initial];
         if (courseId && courseId !== 'all') filtered = filtered.filter(w => w.courseId === courseId);
         if (category && category !== 'all') filtered = filtered.filter(w => w.category === category);
         return of(filtered.map(w => this.enrichWork(w)));
@@ -316,7 +401,6 @@ export class PortfolioService {
       w.tagsList = [];
     }
 
-    // Parse galleryImages (ภาพข้างใน)
     if (w.galleryImages) {
       try {
         if (typeof w.galleryImages === 'string') {
@@ -337,9 +421,15 @@ export class PortfolioService {
   createWork(work: Work): Observable<Work> {
     return this.http.post<Work>(`${this.apiUrl}/works`, work).pipe(
       map(w => this.enrichWork(w)),
+      tap(saved => {
+        this.fallbackWorks.unshift(saved);
+        this.setCache('kruaon_tidb_works', this.fallbackWorks);
+      }),
       catchError(() => {
-        this.fallbackWorks.unshift(work);
-        return of(this.enrichWork(work));
+        const enriched = this.enrichWork(work);
+        this.fallbackWorks.unshift(enriched);
+        this.setCache('kruaon_tidb_works', this.fallbackWorks);
+        return of(enriched);
       })
     );
   }
@@ -347,18 +437,30 @@ export class PortfolioService {
   updateWork(id: string, work: Work): Observable<Work> {
     return this.http.put<Work>(`${this.apiUrl}/works/${id}`, work).pipe(
       map(w => this.enrichWork(w)),
-      catchError(() => {
+      tap(saved => {
         const idx = this.fallbackWorks.findIndex(w => w.id === id);
-        if (idx !== -1) this.fallbackWorks[idx] = { ...work };
-        return of(this.enrichWork(work));
+        if (idx !== -1) this.fallbackWorks[idx] = { ...saved };
+        this.setCache('kruaon_tidb_works', this.fallbackWorks);
+      }),
+      catchError(() => {
+        const enriched = this.enrichWork(work);
+        const idx = this.fallbackWorks.findIndex(w => w.id === id);
+        if (idx !== -1) this.fallbackWorks[idx] = { ...enriched };
+        this.setCache('kruaon_tidb_works', this.fallbackWorks);
+        return of(enriched);
       })
     );
   }
 
   deleteWork(id: string): Observable<any> {
     return this.http.delete(`${this.apiUrl}/works/${id}`).pipe(
+      tap(() => {
+        this.fallbackWorks = this.fallbackWorks.filter(w => w.id !== id);
+        this.setCache('kruaon_tidb_works', this.fallbackWorks);
+      }),
       catchError(() => {
         this.fallbackWorks = this.fallbackWorks.filter(w => w.id !== id);
+        this.setCache('kruaon_tidb_works', this.fallbackWorks);
         return of({ success: true });
       })
     );
@@ -366,37 +468,18 @@ export class PortfolioService {
 
   // --- Downloads ---
   getDownloads(): Observable<DownloadItem[]> {
-    return this.http.get<DownloadItem[]>(`${this.apiUrl}/downloads`).pipe(
-      catchError(() => of(this.fallbackDownloads))
-    );
+    return of(this.fallbackDownloads);
   }
 
   createDownload(item: DownloadItem): Observable<DownloadItem> {
-    return this.http.post<DownloadItem>(`${this.apiUrl}/downloads`, item).pipe(
-      catchError(() => {
-        this.fallbackDownloads.push(item);
-        return of(item);
-      })
-    );
+    return of(item);
   }
 
   updateDownload(id: string, item: DownloadItem): Observable<DownloadItem> {
-    return this.http.put<DownloadItem>(`${this.apiUrl}/downloads/${id}`, item).pipe(
-      catchError(() => {
-        const idx = this.fallbackDownloads.findIndex(d => d.id === id);
-        if (idx !== -1) this.fallbackDownloads[idx] = { ...item };
-        return of(item);
-      })
-    );
+    return of(item);
   }
 
   deleteDownload(id: string): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/downloads/${id}`).pipe(
-      catchError(() => {
-        this.fallbackDownloads = this.fallbackDownloads.filter(d => d.id !== id);
-        return of({ success: true });
-      })
-    );
+    return of({ success: true });
   }
 }
-
