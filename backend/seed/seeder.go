@@ -48,7 +48,7 @@ func SeedInitialData(db *gorm.DB) {
 			Email:              "pusiphong.it@example.ac.th",
 			Phone:              "08x-xxx-xxxx",
 			LineID:             "@pusiphong_it",
-			Avatar:             "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=600&auto=format&fit=crop",
+			Avatar:             "/pusiphong.jpg",
 			Bio:                "นักศึกษาหลักสูตรประกาศนียบัตรวิชาชีพชั้นสูง (ปวส.) สาขาวิชาเทคโนโลยีสารสนเทศ มุ่งมั่นพัฒนาทักษะด้านการพัฒนาซอฟต์แวร์สำหรับอุปกรณ์เคลื่อนที่ (Mobile Application) ทั้งระบบ Android/iOS ด้วย Flutter และการเชื่อมต่อ Web API ด้วย Golang & TiDB Database (อาจารย์ผู้สอน: ครูอ๋อน)",
 			TeachingPhilosophy: "เรียนรู้ด้วยการลงมือปฏิบัติจริง (Hands-on Practice) มุ่งมั่นพัฒนาซอฟต์แวร์เพื่อตอบโจทย์ผู้ใช้งานจริง",
 			StatsJSON:          statsJSON,
