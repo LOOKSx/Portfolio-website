@@ -11,6 +11,11 @@ import (
 
 // SeedInitialData populates initial portfolio data if database is empty
 func SeedInitialData(db *gorm.DB) {
+	// Cleanup: Ensure ONLY Course 31901-2009 and its works exist, remove unused courses & downloads
+	db.Where("id != ?", "course-31901-2009").Delete(&models.Course{})
+	db.Where("course_id != ?", "course-31901-2009").Delete(&models.Work{})
+	db.Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&models.Download{})
+
 	// 1. Teacher Profile Seed
 	var count int64
 	db.Model(&models.Teacher{}).Count(&count)
@@ -19,7 +24,7 @@ func SeedInitialData(db *gorm.DB) {
 		statsJSON := `[
 			{"label": "ระดับชั้น/กลุ่ม", "value": "ปวส.2", "unit": "สทส2 เลขที่ 12"},
 			{"label": "รหัสวิชาหลัก", "value": "31901-2009", "unit": "โมบายแอป"},
-			{"label": "โครงงานผลงาน", "value": "6+", "unit": "ชิ้นงาน"},
+			{"label": "โครงงานผลงาน", "value": "3+", "unit": "ชิ้นงาน"},
 			{"label": "อาจารย์ผู้สอน", "value": "ครูอ๋อน", "unit": "ที่ปรึกษา"}
 		]`
 		eduJSON := `[
@@ -28,8 +33,8 @@ func SeedInitialData(db *gorm.DB) {
 		]`
 		achieveJSON := `[
 			"ผู้พัฒนาโครงงานแอปพลิเคชันสำหรับอุปกรณ์เคลื่อนที่ รายวิชา 31901-2009 (อาจารย์ผู้สอน: ครูอ๋อน)",
-			"ผ่านการฝึกปฏิบัติการเชื่อมต่อฐานข้อมูล TiDB / Distributed SQL และ REST API ด้วย Golang",
-			"ผลการเรียนยอดเยี่ยมในกลุ่มวิชาการเขียนโปรแกรมและการพัฒนาซอฟต์แวร์"
+			"ผ่านการฝึกปฏิบัติการเชื่อมต่อฐานข้อมูล TiDB Cloud Serverless และ REST API ด้วย Golang",
+			"ผลการเรียนยอดเยี่ยมในกลุ่มวิชาการเขียนโปรแกรมและการพัฒนาซอฟต์แวร์บนอุปกรณ์เคลื่อนที่"
 		]`
 
 		teacher := models.Teacher{
@@ -54,67 +59,31 @@ func SeedInitialData(db *gorm.DB) {
 		db.Create(&teacher)
 	}
 
-	// 2. Courses Seed
-	db.Model(&models.Course{}).Count(&count)
-	if count == 0 {
-		log.Println("[Seeder] Seeding initial Courses...")
-		courses := []models.Course{
-			{
-				ID:          "course-31901-2009",
-				Code:        "31901-2009",
-				Name:        "การพัฒนาซอฟต์แวร์สำหรับอุปกรณ์เคลื่อนที่",
-				Level:       "ระดับ ปวส.2 สาขาเทคโนโลยีสารสนเทศ",
-				Semester:    "ภาคเรียนที่ 1",
-				Credits:     "3.0 หน่วยกิต (4 คาบ/สัปดาห์)",
-				Description: "ศึกษาและปฏิบัติเกี่ยวกับหลักการพัฒนาซอฟต์แวร์บนอุปกรณ์เคลื่อนที่ สถาปัตยกรรมโมบาย การออกแบบ UI/UX การพัฒนาแอปพลิเคชันเชื่อมต่อ API และฐานข้อมูล TiDB/Cloud ในประเภทวิชาอุตสาหกรรมดิจิทัลและสารสนเทศ",
-				BadgeColor:  "amber",
-				Icon:        "smartphone",
-				CreatedAt:   time.Now(),
-			},
-			{
-				ID:          "course-2",
-				Code:        "ว30281",
-				Name:        "การออกแบบและพัฒนาเว็บไซต์สมัยใหม่",
-				Level:       "ระดับ ปวส. / มัธยมศึกษาตอนปลาย",
-				Semester:    "ภาคเรียนที่ 2",
-				Credits:     "1.5 หน่วยกิต (3 คาบ/สัปดาห์)",
-				Description: "พื้นฐานโครงสร้าง HTML5, CSS3, TypeScript การออกแบบ UI/UX ตามหลักสากล และการพัฒนา Web Application เชื่อมต่อ Backend Golang และฐานข้อมูล",
-				BadgeColor:  "brown",
-				Icon:        "globe",
-				CreatedAt:   time.Now(),
-			},
-			{
-				ID:          "course-3",
-				Code:        "ว22104",
-				Name:        "การออกแบบและเทคโนโลยี",
-				Level:       "ระดับ ปวช. / มัธยมศึกษา",
-				Semester:    "ภาคเรียนที่ 2",
-				Credits:     "1.0 หน่วยกิต (2 คาบ/สัปดาห์)",
-				Description: "กระบวนการออกแบบเชิงวิศวกรรม การเลือกใช้วัสดุ อุปกรณ์ กลไกไฟฟ้าอิเล็กทรอนิกส์ และการแก้ปัญหาในชีวิตประจำวัน",
-				BadgeColor:  "stone",
-				Icon:        "cpu",
-				CreatedAt:   time.Now(),
-			},
-			{
-				ID:          "course-4",
-				Code:        "ว23102",
-				Name:        "นวัตกรรมและโครงงานดิจิทัล",
-				Level:       "ระดับ ปวส.1 / มัธยมศึกษา",
-				Semester:    "ภาคเรียนที่ 1",
-				Credits:     "1.5 หน่วยกิต (3 คาบ/สัปดาห์)",
-				Description: "การพัฒนาโครงงานซอฟต์แวร์ การศึกษาปัญหาในชุมชนและภาคอุตสาหกรรม การบูรณาการเทคโนโลยี และการนำเสนอผลงานสู่สาธารณชน",
-				BadgeColor:  "orange",
-				Icon:        "lightbulb",
-				CreatedAt:   time.Now(),
-			},
+	// 2. Courses Seed (ONLY Course 31901-2009)
+	var courseCount int64
+	db.Model(&models.Course{}).Where("id = ?", "course-31901-2009").Count(&courseCount)
+	if courseCount == 0 {
+		log.Println("[Seeder] Seeding primary Course 31901-2009...")
+		c := models.Course{
+			ID:          "course-31901-2009",
+			Code:        "31901-2009",
+			Name:        "การพัฒนาซอฟต์แวร์สำหรับอุปกรณ์เคลื่อนที่",
+			Level:       "ระดับ ปวส.2 สาขาเทคโนโลยีสารสนเทศ",
+			Semester:    "ภาคเรียนที่ 1",
+			Credits:     "3.0 หน่วยกิต (4 คาบ/สัปดาห์)",
+			Description: "ศึกษาและปฏิบัติเกี่ยวกับหลักการพัฒนาซอฟต์แวร์บนอุปกรณ์เคลื่อนที่ สถาปัตยกรรมโมบาย การออกแบบ UI/UX การพัฒนาแอปพลิเคชันเชื่อมต่อ API และฐานข้อมูล TiDB Cloud ในประเภทวิชาอุตสาหกรรมดิจิทัลและสารสนเทศ (อาจารย์ผู้สอน: ครูอ๋อน)",
+			BadgeColor:  "amber",
+			Icon:        "smartphone",
+			CreatedAt:   time.Now(),
 		}
-		db.Create(&courses)
+		db.Create(&c)
 	}
 
-	// 3. Works Seed
-	db.Model(&models.Work{}).Count(&count)
-	if count == 0 {
-		log.Println("[Seeder] Seeding initial Works & Course Portfolios...")
+	// 3. Works Seed (ONLY for Course 31901-2009)
+	var workCount int64
+	db.Model(&models.Work{}).Where("course_id = ?", "course-31901-2009").Count(&workCount)
+	if workCount == 0 {
+		log.Println("[Seeder] Seeding initial Works for Course 31901-2009...")
 		works := []models.Work{
 			{
 				ID:            "work-pusiphong",
@@ -126,10 +95,42 @@ func SeedInitialData(db *gorm.DB) {
 				StudentName:   "นาย พุศิพงศ์ ราชรักษ์ ปวส.2 สทส2 เลขที่ 12 กลุ่ม 1 (สาขาเทคโนโลยีสารสนเทศ)",
 				Image:         "https://images.unsplash.com/photo-1551650975-87deedd944c3?q=80&w=800&auto=format&fit=crop",
 				GalleryImages: `["https://images.unsplash.com/photo-1551650975-87deedd944c3?q=80&w=800&auto=format&fit=crop","https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?q=80&w=800&auto=format&fit=crop","https://images.unsplash.com/photo-1526498460520-4c246339dccb?q=80&w=800&auto=format&fit=crop"]`,
-				Description:   "ผลงานการพัฒนาซอฟต์แวร์สำหรับอุปกรณ์เคลื่อนที่ ในรายวิชา 31901-2009 โดย นาย พุศิพงศ์ ราชรักษ์ ปวส.2 สทส2 เลขที่ 12 กลุ่ม 1 สาขาเทคโนโลยีสารสนเทศ ประเภทวิชาอุตสาหกรรมดิจิทัลและสารสนเทศ ออกแบบ UI/UX โมบายที่ทันสมัยและเชื่อมต่อระบบฐานข้อมูลอย่างมีประสิทธิภาพ",
+				Description:   "ผลงานการพัฒนาซอฟต์แวร์สำหรับอุปกรณ์เคลื่อนที่ ในรายวิชา 31901-2009 โดย นาย พุศิพงศ์ ราชรักษ์ ปวส.2 สทส2 เลขที่ 12 กลุ่ม 1 สาขาเทคโนโลยีสารสนเทศ ประเภทวิชาอุตสาหกรรมดิจิทัลและสารสนเทศ ออกแบบ UI/UX โมบายที่ทันสมัยและเชื่อมต่อระบบฐานข้อมูล TiDB Cloud อย่างมีประสิทธิภาพ",
 				Link:          "#",
 				DownloadText:  "ดูรายละเอียดโครงงานและผลงานแอป",
-				Tags:          "31901-2009, ปวส.2, สทส2, เทคโนโลยีสารสนเทศ, อุตสาหกรรมดิจิทัล",
+				Tags:          "31901-2009, ปวส.2, สทส2, เทคโนโลยีสารสนเทศ, อุตสาหกรรมดิจิทัล, Flutter, TiDB",
+				CreatedAt:     time.Now(),
+			},
+			{
+				ID:            "work-mobile-api",
+				CourseID:      "course-31901-2009",
+				Title:         "ระบบเชื่อมต่อ Mobile API และฐานข้อมูล TiDB Cloud Serverless",
+				Category:      "media",
+				CategoryLabel: "สื่อนวัตกรรมการสอน",
+				Date:          "ภาคเรียนที่ 1 ปีการศึกษา 2567",
+				StudentName:   "นาย พุศิพงศ์ ราชรักษ์ (อาจารย์ผู้สอน: ครูอ๋อน)",
+				Image:         "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=800&auto=format&fit=crop",
+				GalleryImages: `["https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=800&auto=format&fit=crop"]`,
+				Description:   "การออกแบบและพัฒนา Backend RESTful API ด้วยภาษา Go (Golang) เพื่อรองรับการรับ-ส่งข้อมูลแบบ Real-time ระหว่างแอปพลิเคชันโมบายและฐานข้อมูล TiDB Cloud Serverless พร้อมระบบความปลอดภัย TLS Encryption",
+				Link:          "#",
+				DownloadText:  "ดูโครงสร้าง API & Data Models",
+				Tags:          "Golang, REST API, TiDB Cloud, Distributed SQL, Backend",
+				CreatedAt:     time.Now(),
+			},
+			{
+				ID:            "work-mobile-uiux",
+				CourseID:      "course-31901-2009",
+				Title:         "การออกแบบสถาปัตยกรรม UI/UX โมบายแอปพลิเคชัน (Mobile Prototype)",
+				Category:      "award",
+				CategoryLabel: "รางวัล & ผลสัมฤทธิ์",
+				Date:          "ภาคเรียนที่ 1 ปีการศึกษา 2567",
+				StudentName:   "นาย พุศิพงศ์ ราชรักษ์ ปวส.2 สทส2",
+				Image:         "https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?q=80&w=800&auto=format&fit=crop",
+				GalleryImages: `["https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?q=80&w=800&auto=format&fit=crop"]`,
+				Description:   "การออกแบบ Wireframe, User Flow และ Interactive Prototype สำหรับแอปพลิเคชันบนสมาร์ตโฟน รองรับการทำงานแบบ Responsive ทั้งอุปกรณ์เคลื่อนที่ระบบ Android และ iOS",
+				Link:          "#",
+				DownloadText:  "ดูตัวอย่าง Interactive Prototype",
+				Tags:          "UI/UX, Figma, Prototype, Mobile Design",
 				CreatedAt:     time.Now(),
 			},
 			{
@@ -141,139 +142,14 @@ func SeedInitialData(db *gorm.DB) {
 				Date:          "มิถุนายน 2567",
 				StudentName:   "ผู้จัดทำ: ครูอ๋อน",
 				Image:         "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?q=80&w=800&auto=format&fit=crop",
+				GalleryImages: `["https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?q=80&w=800&auto=format&fit=crop"]`,
 				Description:   "แผนการจัดการเรียนรู้ Active Learning รายวิชา 31901-2009 สาขาเทคโนโลยีสารสนเทศ มุ่งเน้นการฝึกทักษะการปฏิบัติงานจริง การออกแบบสถาปัตยกรรมซอฟต์แวร์โมบาย และการทดสอบระบบ",
 				Link:          "#",
-				DownloadText:  "ดาวน์โหลดแผนการสอน (PDF)",
+				DownloadText:  "ดูตัวอย่างแผนการสอน (PDF)",
 				Tags:          "แผนการสอน, 31901-2009, ปวส., Active Learning",
-				CreatedAt:     time.Now(),
-			},
-			{
-				ID:            "work-1",
-				CourseID:      "course-2",
-				Title:         "เว็บไซต์ประชาสัมพันธ์การท่องเที่ยวชุมชนเชิงวัฒนธรรม",
-				Category:      "student",
-				CategoryLabel: "ผลงานนักเรียน",
-				Date:          "มกราคม 2567",
-				StudentName:   "กลุ่มต้นกล้าไอที (นายภานุวัฒน์ และคณะ ม.5/2)",
-				Image:         "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=800&auto=format&fit=crop",
-				Description:   "ผลงานโครงงานกลุ่มวิชาพัฒนาเว็บไซต์ ออกแบบ UI สไตล์มินิมอล มีระบบค้นหาสถานที่ท่องเที่ยวในชุมชน และสามารถรองรับการแสดงผลบนสมาร์ตโฟนได้อย่างสมบูรณ์",
-				Link:          "#",
-				DownloadText:  "ดูตัวอย่างผลงานเว็บไซต์",
-				Tags:          "HTML/CSS, Responsive, UI/UX, โครงงาน",
-				CreatedAt:     time.Now(),
-			},
-			{
-				ID:            "work-2",
-				CourseID:      "course-1",
-				Title:         "ชุดสื่อการเรียนรู้อัลกอริทึมด้วยบอร์ดเกม 'ภารกิจพิชิตเขาวงกต'",
-				Category:      "media",
-				CategoryLabel: "สื่อนวัตกรรมการสอน",
-				Date:          "กันยายน 2566",
-				StudentName:   "จัดทำโดย: ครูอ๋อน",
-				Image:         "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=800&auto=format&fit=crop",
-				Description:   "สื่อนวัตกรรม Unplugged Coding สำหรับฝึกฝนแนวคิดเชิงคำนวณและอัลกอริทึม โดยไม่ต้องใช้อุปกรณ์คอมพิวเตอร์ ช่วยให้นักเรียนเข้าใจกระบวนการแตกปัญหาย่อย ได้อย่างสนุกสนาน",
-				Link:          "#",
-				DownloadText:  "ดาวน์โหลดคู่มือและสื่อการสอน (PDF)",
-				Tags:          "Unplugged, Active Learning, นวัตกรรมครู",
-				CreatedAt:     time.Now(),
-			},
-			{
-				ID:            "work-3",
-				CourseID:      "course-1",
-				Title:         "แผนการจัดการเรียนรู้ Active Learning หน่วย 'แนวคิดเชิงคำนวณ'",
-				Category:      "plan",
-				CategoryLabel: "แผนการสอน & ใบงาน",
-				Date:          "มิถุนายน 2566",
-				StudentName:   "ผู้จัดทำ: ครูอ๋อน",
-				Image:         "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?q=80&w=800&auto=format&fit=crop",
-				Description:   "แผนการจัดการเรียนรู้ 8 คาบ เน้นกระบวนการสืบเสาะหาความรู้และกิจกรรมกลุ่ม พร้อมใบกิจกรรม เกณฑ์การวัดและประเมินผลตามสภาพจริง (Rubric Assessment)",
-				Link:          "#",
-				DownloadText:  "ดาวน์โหลดแผนการสอนฉบับเต็ม (PDF)",
-				Tags:          "แผนการสอน, ว.PA, Rubrics",
-				CreatedAt:     time.Now(),
-			},
-			{
-				ID:            "work-4",
-				CourseID:      "course-3",
-				Title:         "แบบจำลองเครื่องคัดแยกขยะอัจฉริยะระบบเซนเซอร์",
-				Category:      "student",
-				CategoryLabel: "ผลงานนักเรียน",
-				Date:          "กุมภาพันธ์ 2567",
-				StudentName:   "ด.ญ.กัญญาณัฐ และ ด.ช.วีรภัทร ม.2/1",
-				Image:         "https://images.unsplash.com/photo-1581092160607-ee22621dd758?q=80&w=800&auto=format&fit=crop",
-				Description:   "ผลงานการประยุกต์ใช้กระบวนการออกแบบเชิงวิศวกรรม ผสานบอร์ดไมโครคอนโทรลเลอร์ตรวจจับขยะรีไซเคิล ช่วยสร้างความตระหนักเรื่องสิ่งแวดล้อมในโรงเรียน",
-				Link:          "#",
-				DownloadText:  "รายงานสรุปโครงงาน (PDF)",
-				Tags:          "STEM, สิ่งประดิษฐ์, ไมโครคอนโทรลเลอร์",
-				CreatedAt:     time.Now(),
-			},
-			{
-				ID:            "work-5",
-				CourseID:      "course-4",
-				Title:         "รางวัลเหรียญทอง การแข่งขันโครงงานคอมพิวเตอร์ประเภทซอฟต์แวร์",
-				Category:      "award",
-				CategoryLabel: "รางวัล & ผลสัมฤทธิ์",
-				Date:          "สิงหาคม 2566",
-				StudentName:   "ครูผู้ฝึกสอน: ครูอ๋อน / นักเรียนทีม AI Clean",
-				Image:         "https://images.unsplash.com/photo-1567427017947-545c5f8d16ad?q=80&w=800&auto=format&fit=crop",
-				Description:   "นำนักเรียนเข้าร่วมแข่งขันงานมหกรรมวิชาการระดับเขตพื้นที่การศึกษา ได้รับรางวัลเหรียญทองอันดับ 1 จากผลงานแอปพลิเคชันคัดแยกขยะด้วย Machine Learning",
-				Link:          "#",
-				DownloadText:  "เกียรติบัตรและเอกสารรับรอง",
-				Tags:          "รางวัลเหรียญทอง, การแข่งขันวิชาการ, งานเขตพื้นที่",
-				CreatedAt:     time.Now(),
-			},
-			{
-				ID:            "work-6",
-				CourseID:      "course-2",
-				Title:         "ชุดวิดีโอคลิปการสอนย้อนหลัง 'Web Dev 101 สำหรับเยาวชน'",
-				Category:      "media",
-				CategoryLabel: "สื่อนวัตกรรมการสอน",
-				Date:          "พฤศจิกายน 2566",
-				StudentName:   "ผู้จัดทำ: ครูอ๋อน",
-				Image:         "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800&auto=format&fit=crop",
-				Description:   "คลิปวิดีโอสั้นประกอบการสอน (Micro-learning) ความยาวตอนละ 5-8 นาที ให้นักเรียนสามารถทบทวนการเขียนโค้ดได้ทุกที่ทุกเวลาบนแพลตฟอร์มออนไลน์",
-				Link:          "#",
-				DownloadText:  "เปิดดูเพลย์ลิสต์บทเรียน",
-				Tags:          "สื่อออนไลน์, Microlearning, Flipped Classroom",
 				CreatedAt:     time.Now(),
 			},
 		}
 		db.Create(&works)
-	}
-
-	// 4. Downloads Seed
-	db.Model(&models.Download{}).Count(&count)
-	if count == 0 {
-		log.Println("[Seeder] Seeding initial Academic Downloads...")
-		downloads := []models.Download{
-			{
-				ID:        "dl-1",
-				Title:     "เอกสารประมวลรายวิชา (Course Syllabus) รหัสวิชา 31901-2009 การพัฒนาซอฟต์แวร์สำหรับอุปกรณ์เคลื่อนที่",
-				Course:    "วิชา 31901-2009",
-				Format:    "PDF",
-				Size:      "2.4 MB",
-				URL:       "#",
-				CreatedAt: time.Now(),
-			},
-			{
-				ID:        "dl-2",
-				Title:     "รายงานสรุปผลโครงงาน Mobile Application (Flutter + TiDB) - นาย พุศิพงศ์ ราชรักษ์",
-				Course:    "โครงงาน ปวส.2 สทส2",
-				Format:    "PDF",
-				Size:      "4.8 MB",
-				URL:       "#",
-				CreatedAt: time.Now(),
-			},
-			{
-				ID:        "dl-3",
-				Title:     "คู่มือการเชื่อมต่อ Golang REST API และฐานข้อมูล TiDB Distributed SQL",
-				Course:    "เอกสารทางเทคนิค (Tech Guide)",
-				Format:    "PDF",
-				Size:      "1.5 MB",
-				URL:       "#",
-				CreatedAt: time.Now(),
-			},
-		}
-		db.Create(&downloads)
 	}
 }

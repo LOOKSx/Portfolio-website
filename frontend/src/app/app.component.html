@@ -28,7 +28,6 @@
       <a href="#teacher-profile" class="hover:text-custom-accent transition-colors py-2">ประวัตินักศึกษา</a>
       <a href="#courses-section" class="hover:text-custom-accent transition-colors py-2">รายวิชาที่เรียน</a>
       <a href="#portfolio-section" class="hover:text-custom-accent transition-colors py-2">ผลงานแอปพลิเคชัน</a>
-      <a href="#downloads-section" class="hover:text-custom-accent transition-colors py-2">เอกสารโครงงาน</a>
       <a href="#contact-section" class="hover:text-custom-accent transition-colors py-2">ติดต่อ</a>
     </nav>
 
@@ -290,38 +289,36 @@
         }
       </div>
 
-      <!-- Course Cards Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <!-- Course Card (Single Primary Subject: 31901-2009) -->
+      <div class="max-w-3xl mx-auto">
         @for (course of courses; track course.id) {
-          <div class="relative bg-custom-surface border border-custom rounded-2xl p-6 transition-all duration-300 hover:shadow-hover group">
+          <div class="relative bg-custom-surface border border-custom rounded-3xl p-6 sm:p-8 transition-all duration-300 shadow-sm hover:shadow-hover group">
             
             @if (portfolio.isEditMode()) {
-              <div class="absolute top-4 right-4 flex space-x-1.5 z-10">
-                <button (click)="openEditCourseModal(course)" class="p-1.5 rounded-lg bg-custom-accent-soft text-custom-accent hover:bg-custom-accent hover:text-white transition-colors" title="แก้ไขวิชา">
+              <div class="absolute top-5 right-5 flex space-x-1.5 z-10">
+                <button (click)="openEditCourseModal(course)" class="p-2 rounded-xl bg-custom-accent-soft text-custom-accent hover:bg-custom-accent hover:text-white transition-colors" title="แก้ไขวิชา">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                </button>
-                <button (click)="deleteCourse(course)" class="p-1.5 rounded-lg bg-red-100 text-red-700 hover:bg-red-600 hover:text-white transition-colors" title="ลบวิชา">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                 </button>
               </div>
             }
 
-            <div class="flex items-center space-x-3 mb-3">
-              <span class="px-2.5 py-1 text-xs font-bold rounded-md bg-custom-accent text-white font-num tracking-wide">{{ course.code }}</span>
-              <span class="text-xs px-2.5 py-0.5 rounded-full bg-custom-subtle text-custom-muted font-medium">{{ course.semester }}</span>
+            <div class="flex flex-wrap items-center gap-2.5 mb-4">
+              <span class="px-3.5 py-1.5 text-sm font-bold rounded-xl bg-custom-accent text-white font-num tracking-wide">{{ course.code }}</span>
+              <span class="text-xs px-3 py-1 rounded-full bg-custom-subtle text-custom-main font-semibold">{{ course.semester }}</span>
+              <span class="text-xs px-3 py-1 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 font-semibold">{{ course.credits }}</span>
             </div>
 
-            <h3 class="text-lg font-bold text-custom-main group-hover:text-custom-accent transition-colors mb-2">{{ course.name }}</h3>
-            <p class="text-xs font-medium text-custom-accent mb-2">ระดับ: {{ course.level }} | {{ course.credits }}</p>
-            <p class="text-xs text-custom-muted line-clamp-3 mb-4 leading-relaxed">{{ course.description }}</p>
+            <h3 class="text-xl sm:text-2xl font-heading font-bold text-custom-main group-hover:text-custom-accent transition-colors mb-2">{{ course.name }}</h3>
+            <p class="text-xs sm:text-sm font-medium text-custom-accent mb-3">ระดับการศึกษา: {{ course.level }} (อาจารย์ผู้สอน: ครูอ๋อน)</p>
+            <p class="text-xs sm:text-sm text-custom-muted mb-6 leading-relaxed">{{ course.description }}</p>
 
             <div class="pt-4 border-t border-custom flex items-center justify-between">
-              <span class="text-xs text-custom-muted flex items-center gap-1.5 font-medium">
-                ผลงานสะสม: <strong class="text-custom-main font-num">{{ getCourseWorksCount(course.id) }}</strong> ชิ้น
+              <span class="text-xs sm:text-sm text-custom-muted flex items-center gap-1.5 font-medium">
+                ผลงานทั้งหมดในรายวิชานี้: <strong class="text-custom-main font-num text-base font-bold">{{ works.length }}</strong> ชิ้นงาน
               </span>
-              <button (click)="filterByCourse(course.id)" class="text-xs font-semibold text-custom-accent hover:underline flex items-center gap-1">
-                ดูผลงานวิชานี้ →
-              </button>
+              <a href="#portfolio-section" class="text-xs sm:text-sm font-semibold text-custom-accent hover:underline flex items-center gap-1">
+                ไปที่คลังผลงานด้านล่าง ↓
+              </a>
             </div>
           </div>
         }
@@ -346,7 +343,7 @@
             คลังโครงงานและผลงานซอฟต์แวร์
           </h2>
           <p class="text-xs sm:text-sm text-custom-muted mt-1">
-            รวบรวมแอปพลิเคชันบนอุปกรณ์เคลื่อนที่ โครงงานซอฟต์แวร์ และใบงานปฏิบัติการ โดย นาย พุศิพงศ์ ราชรักษ์ (อาจารย์ผู้สอน: ครูอ๋อน)
+            รวบรวมแอปพลิเคชันบนอุปกรณ์เคลื่อนที่ โครงงานซอฟต์แวร์ และใบงานปฏิบัติการ ในรายวิชา <strong>31901-2009 การพัฒนาซอฟต์แวร์สำหรับอุปกรณ์เคลื่อนที่</strong> โดย นาย พุศิพงศ์ ราชรักษ์ (อาจารย์ผู้สอน: ครูอ๋อน)
           </p>
         </div>
 
@@ -358,33 +355,8 @@
       </div>
 
       <!-- Filter Controls Box -->
-      <div class="bg-custom-surface border border-custom rounded-2xl p-4 sm:p-5 mb-8 shadow-sm space-y-4">
-        
-        <!-- 1. Course Filter Tabs -->
-        <div>
-          <div class="text-xs font-semibold text-custom-muted mb-2">เลือกรหัสรายวิชา:</div>
-          <div class="flex flex-wrap gap-2">
-            <button (click)="filterByCourse('all')" 
-                    class="px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all"
-                    [ngClass]="selectedCourseFilter === 'all' ? 'bg-custom-accent text-white shadow-sm' : 'bg-custom-surface text-custom-muted border border-custom hover:border-custom-accent'">
-              ทั้งหมด ({{ works.length }})
-            </button>
-            @for (c of courses; track c.id) {
-              <button (click)="filterByCourse(c.id)" 
-                      class="px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5"
-                      [ngClass]="selectedCourseFilter === c.id ? 'bg-custom-accent text-white shadow-sm' : 'bg-custom-surface text-custom-muted border border-custom hover:border-custom-accent'">
-                <span class="font-num font-semibold">{{ c.code }}</span>
-                <span class="hidden md:inline">{{ c.name.length > 16 ? c.name.slice(0, 16) + '...' : c.name }}</span>
-                <span class="text-xs px-1.5 py-0.2 rounded-full" [ngClass]="selectedCourseFilter === c.id ? 'bg-white/20' : 'bg-custom-subtle'">
-                  {{ getCourseWorksCount(c.id) }}
-                </span>
-              </button>
-            }
-          </div>
-        </div>
-
-        <!-- 2. Sub-Category Pills & Search Bar -->
-        <div class="pt-3 border-t border-custom flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="bg-custom-surface border border-custom rounded-2xl p-4 sm:p-5 mb-8 shadow-sm">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-4">
           <div class="flex flex-wrap gap-1.5 w-full md:w-auto">
             <button (click)="filterByCategory('all')" 
                     class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
@@ -511,64 +483,7 @@
   </section>
 
 
-  <!-- -----------------------------------------------------------------------
-       SECTION 4: คลังเอกสารและดาวน์โหลด (Academic Downloads)
-       ----------------------------------------------------------------------- -->
-  <section id="downloads-section" class="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 border-t border-custom bg-custom-subtle/40 transition-colors">
-    <div class="max-w-7xl mx-auto">
-      
-      <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
-        <div>
-          <span class="text-xs font-bold uppercase tracking-wider text-custom-accent flex items-center gap-1 mb-1">
-            <span>📥</span> Academic Resources & Files
-          </span>
-          <h2 class="text-2xl sm:text-3xl font-heading font-bold text-custom-main">
-            คลังเอกสารและประมวลรายวิชา
-          </h2>
-          <p class="text-xs sm:text-sm text-custom-muted mt-1">
-            เอกสารประมวลรายวิชา (Syllabus), รายงานสรุปผลโครงงาน, และคู่มือทางเทคนิค (อาจารย์ผู้สอน: ครูอ๋อน)
-          </p>
-        </div>
 
-        @if (portfolio.isEditMode()) {
-          <button (click)="openNewDownloadModal()" class="px-4 py-2.5 rounded-xl bg-custom-accent text-white text-xs sm:text-sm font-semibold hover:opacity-90 shadow-sm transition-all flex items-center gap-2 self-start md:self-auto">
-            <span>+</span> เพิ่มเอกสารดาวน์โหลด
-          </button>
-        }
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        @for (d of downloads; track d.id) {
-          <div class="bg-custom-surface border border-custom rounded-2xl p-4 flex items-center justify-between transition-all hover:border-custom-accent hover:shadow-card relative group">
-            <div class="flex items-center space-x-3 flex-1 min-w-0 pr-2">
-              <div class="w-10 h-10 rounded-xl bg-custom-accent-soft text-custom-accent flex items-center justify-center font-bold text-xs uppercase font-num shrink-0">
-                {{ d.format }}
-              </div>
-              <div class="min-w-0">
-                <h5 class="text-sm font-bold text-custom-main truncate" [title]="d.title">{{ d.title }}</h5>
-                <p class="text-xs text-custom-muted">{{ d.course }} • ขนาด {{ d.size }}</p>
-              </div>
-            </div>
-
-            <div class="flex items-center space-x-1.5 shrink-0">
-              @if (portfolio.isEditMode()) {
-                <button (click)="openEditDownloadModal(d)" class="p-2 rounded-xl bg-custom-subtle text-custom-accent hover:bg-custom-accent hover:text-white transition-colors" title="แก้ไขเอกสาร">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                </button>
-                <button (click)="deleteDownload(d, $event)" class="p-2 rounded-xl bg-red-100 text-red-600 hover:bg-red-600 hover:text-white transition-colors" title="ลบเอกสาร">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                </button>
-              }
-              <a [href]="d.url" target="_blank" class="p-2.5 rounded-xl bg-custom-subtle text-custom-main hover:bg-custom-accent hover:text-white transition-colors" title="ดาวน์โหลด">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-              </a>
-            </div>
-          </div>
-        }
-      </div>
-
-    </div>
-  </section>
 
 
   <!-- -----------------------------------------------------------------------
@@ -1024,60 +939,7 @@
 }
 
 
-<!-- =========================================================================
-     8. MODAL: เพิ่ม/แก้ไขเอกสารดาวน์โหลด (Download Edit Modal)
-     ========================================================================= -->
-@if (showDownloadModal) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center modal-backdrop p-4 overflow-y-auto">
-    <div class="bg-custom-surface border border-custom rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative my-8">
-      <div class="flex items-center justify-between pb-4 border-b border-custom mb-6">
-        <h3 class="text-lg font-heading font-bold text-custom-main">
-          {{ downloadForm.id ? 'แก้ไขเอกสารดาวน์โหลด' : 'เพิ่มเอกสารดาวน์โหลดใหม่' }}
-        </h3>
-        <button (click)="closeDownloadModal()" class="text-custom-muted hover:text-custom-main text-lg font-bold">✕</button>
-      </div>
 
-      <div class="space-y-4 text-xs sm:text-sm">
-        <div>
-          <label class="block font-medium text-custom-main mb-1">ชื่อเอกสาร / รายงาน</label>
-          <input type="text" [(ngModel)]="downloadForm.title" placeholder="เช่น เอกสารประมวลรายวิชา 31901-2009" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main">
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block font-medium text-custom-main mb-1">รายวิชา / สังกัด</label>
-            <input type="text" [(ngModel)]="downloadForm.course" placeholder="เช่น วิชา 31901-2009" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main">
-          </div>
-          <div>
-            <label class="block font-medium text-custom-main mb-1">รูปแบบไฟล์ (Format)</label>
-            <select [(ngModel)]="downloadForm.format" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main">
-              <option value="PDF">PDF</option>
-              <option value="DOCX">DOCX</option>
-              <option value="ZIP">ZIP</option>
-              <option value="LINK">LINK</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block font-medium text-custom-main mb-1">ขนาดไฟล์ (Size)</label>
-            <input type="text" [(ngModel)]="downloadForm.size" placeholder="เช่น 2.4 MB" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main">
-          </div>
-          <div>
-            <label class="block font-medium text-custom-main mb-1">URL / ลิงก์ดาวน์โหลด</label>
-            <input type="text" [(ngModel)]="downloadForm.url" placeholder="#" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main">
-          </div>
-        </div>
-
-        <div class="pt-4 border-t border-custom flex justify-end space-x-2">
-          <button (click)="closeDownloadModal()" class="px-4 py-2 rounded-xl border border-custom text-custom-muted hover:bg-custom-subtle">ยกเลิก</button>
-          <button (click)="saveDownload()" class="px-5 py-2 rounded-xl bg-custom-accent text-white font-semibold hover:opacity-90">บันทึกเอกสาร</button>
-        </div>
-      </div>
-    </div>
-  </div>
-}
 
 
 <!-- =========================================================================
