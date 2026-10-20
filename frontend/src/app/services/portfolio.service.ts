@@ -408,8 +408,19 @@ export class PortfolioService {
   }
 
   private enrichWork(w: Work): Work {
+    // Parse tags: support both JSON array ["tag1","tag2"] and comma-separated "tag1, tag2"
     if (w.tags) {
-      w.tagsList = w.tags.split(',').map(t => t.trim()).filter(Boolean);
+      const raw = w.tags.trim();
+      if (raw.startsWith('[')) {
+        try {
+          const parsed = JSON.parse(raw);
+          w.tagsList = Array.isArray(parsed) ? parsed.map((t: string) => String(t).trim()).filter(Boolean) : [];
+        } catch {
+          w.tagsList = raw.replace(/[\[\]"]/g, '').split(',').map((t: string) => t.trim()).filter(Boolean);
+        }
+      } else {
+        w.tagsList = raw.split(',').map((t: string) => t.trim()).filter(Boolean);
+      }
     } else {
       w.tagsList = [];
     }
