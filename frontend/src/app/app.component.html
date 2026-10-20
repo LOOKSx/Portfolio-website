@@ -839,7 +839,7 @@
         @if (portfolio.isSecretUrlDetected()) {
           <div class="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-amber-800 dark:text-amber-300 text-xs flex items-center gap-2">
             <span>✨</span>
-            <span>ตรวจพบรหัสลับตรงลิงก์: <strong>phuttiphongF</strong></span>
+            <span>✨ ตรวจพบรหัสลับตรงลิงก์แล้ว — กรอกรหัสผ่านเพื่อยืนยัน</span>
           </div>
         }
 
@@ -849,9 +849,9 @@
           </label>
           <input type="text" 
                  [(ngModel)]="secretKeyInput" 
-                 placeholder="เช่น phuttiphongF" 
+                 placeholder="กรอกรหัสลับจากลิงก์" 
                  class="w-full px-3.5 py-2.5 rounded-xl bg-custom-subtle border border-custom text-custom-main font-mono text-xs sm:text-sm focus:border-custom-accent outline-none">
-          <p class="text-[11px] text-custom-muted mt-1">รหัสลับใน URL คือ <code>phuttiphongF</code></p>
+          <p class="text-[11px] text-custom-muted mt-1">กรอกรหัสลับที่แนบมาพร้อมลิงก์ที่ได้รับ</p>
         </div>
 
         <div>
@@ -863,7 +863,7 @@
                  (keyup.enter)="submitSecretAuth()"
                  placeholder="กรอกรหัสผ่าน 6 หลัก" 
                  class="w-full px-3.5 py-2.5 rounded-xl bg-custom-subtle border border-custom text-custom-main font-mono text-xs sm:text-sm focus:border-custom-accent outline-none">
-          <p class="text-[11px] text-custom-muted mt-1">รหัสเข้าใช้งานคือ <code>119236</code></p>
+          <p class="text-[11px] text-custom-muted mt-1">กรอกรหัสผ่าน 6 หลักที่ได้รับ</p>
         </div>
 
         @if (secretErrorMsg) {
