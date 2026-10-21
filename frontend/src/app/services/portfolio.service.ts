@@ -49,7 +49,7 @@ export class PortfolioService {
     position: 'นักศึกษา ปวส.2 สทส2 เลขที่ 12 กลุ่ม 1',
     school: 'วิทยาลัยอาชีวศึกษา / วิทยาลัยเทคนิค (สังกัด สอศ.)',
     department: 'สาขาเทคโนโลยีสารสนเทศ ประเภทวิชาอุตสาหกรรมดิจิทัลและสารสนเทศ',
-    instructor: 'อาจารย์ผู้สอน: ครูอ๋อน',
+    instructor: 'ครูอ๋อน (อาจารย์อ๋อน)',
     studentGroup: 'ปวส.2 สทส2 เลขที่ 12',
     email: 'pusiphong.it@example.ac.th',
     phone: '08x-xxx-xxxx',

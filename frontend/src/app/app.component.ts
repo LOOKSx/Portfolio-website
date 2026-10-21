@@ -634,6 +634,10 @@ export class AppComponent implements OnInit {
       if (!this.teacherForm.studentGroup) {
         this.teacherForm.studentGroup = 'ปวส.2 สทส2 เลขที่ 12';
       }
+      // Default instructor if empty
+      if (!this.teacherForm.instructor || this.teacherForm.instructor === 'อาจารย์ผู้สอน: ') {
+        this.teacherForm.instructor = 'ครูอ๋อน (อาจารย์อ๋อน)';
+      }
       // Populate stats with real works count
       if (this.teacher.stats && this.teacher.stats.length > 0) {
         this.teacherForm.stats = this.teacher.stats.map(s => {

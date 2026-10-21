@@ -16,7 +16,7 @@
           พุศิพงศ์ ราชรักษ์
         </span>
         <span class="text-xs text-custom-muted block">
-          ปวส.2 สทส2 | ครูผู้สอน: ครูอ๋อน
+          {{ teacher?.studentGroup || 'ปวส.2 สทส2' }} | อาจารย์ผู้สอน: {{ teacher?.instructor || 'ครูอ๋อน' }}
         </span>
       </div>
     </a>
@@ -189,7 +189,10 @@
             </p>
             <!-- Instructor Tag -->
             <div class="mt-2 text-xs font-medium px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-900 dark:text-amber-200 inline-flex items-center gap-1.5">
-              <span>🎓</span> อาจารย์ผู้สอน / ที่ปรึกษา: <strong class="text-custom-accent">ครูอ๋อน (อาจารย์อ๋อน)</strong>
+              <span>🎓</span> อาจารย์ผู้สอน / ที่ปรึกษา: <strong class="text-custom-accent">{{ teacher?.instructor || 'ครูอ๋อน (อาจารย์อ๋อน)' }}</strong>
+              @if (portfolio.isEditMode()) {
+                <button (click)="openEditTeacherModal()" class="ml-1 text-[11px] text-amber-500 hover:text-amber-600 font-bold" title="แก้ไขอาจารย์ผู้สอน / ที่ปรึกษา">✏️</button>
+              }
             </div>
           </div>
         </div>
@@ -252,7 +255,7 @@
             คลังโครงงานและผลงานซอฟต์แวร์
           </h2>
           <p class="text-xs sm:text-sm text-custom-muted mt-1">
-            รวบรวมแอปพลิเคชันบนอุปกรณ์เคลื่อนที่ โครงงานซอฟต์แวร์ และใบงานปฏิบัติการ ในรายวิชา <strong>31901-2009 การพัฒนาซอฟต์แวร์สำหรับอุปกรณ์เคลื่อนที่</strong> โดย นาย พุศิพงศ์ ราชรักษ์ (อาจารย์ผู้สอน: ครูอ๋อน)
+            รวบรวมแอปพลิเคชันบนอุปกรณ์เคลื่อนที่ โครงงานซอฟต์แวร์ และใบงานปฏิบัติการ ในรายวิชา <strong>31901-2009 การพัฒนาซอฟต์แวร์สำหรับอุปกรณ์เคลื่อนที่</strong> โดย {{ teacher?.name || 'นาย พุศิพงศ์ ราชรักษ์' }} (อาจารย์ผู้สอน: {{ teacher?.instructor || 'ครูอ๋อน' }})
           </p>
         </div>
 
@@ -461,7 +464,7 @@
 <footer class="border-t border-custom bg-custom-surface py-8 px-4 text-center text-xs text-custom-muted transition-colors">
   <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
     <div class="flex items-center space-x-2">
-      <span>© 2026 นาย พุศิพงศ์ ราชรักษ์ | แฟ้มสะสมผลงาน ปวส.2 สทส2 (อาจารย์ผู้สอน: ครูอ๋อน)</span>
+      <span>© 2026 {{ teacher?.name || 'นาย พุศิพงศ์ ราชรักษ์' }} | แฟ้มสะสมผลงาน {{ teacher?.studentGroup || 'ปวส.2 สทส2' }} (อาจารย์ผู้สอน: {{ teacher?.instructor || 'ครูอ๋อน' }})</span>
     </div>
     <div class="text-[11px] text-custom-muted">
       Stack: Angular 19 (TypeScript, HTML, CSS) + Go (Golang) REST API + TiDB Distributed Database
@@ -948,8 +951,8 @@
             <input type="text" [(ngModel)]="teacherForm.position" placeholder="นักศึกษา ปวส.2 สทส2 เลขที่ 12 กลุ่ม 1" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main">
           </div>
           <div>
-            <label class="block font-medium text-custom-main mb-1">อาจารย์ผู้สอน / ที่ปรึกษา</label>
-            <input type="text" [(ngModel)]="teacherForm.instructor" placeholder="อาจารย์ผู้สอน: ครูอ๋อน" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main">
+            <label class="block font-medium text-custom-main mb-1">🎓 อาจารย์ผู้สอน / ที่ปรึกษา</label>
+            <input type="text" [(ngModel)]="teacherForm.instructor" placeholder="ครูอ๋อน (อาจารย์อ๋อน)" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main font-medium">
           </div>
         </div>
 
