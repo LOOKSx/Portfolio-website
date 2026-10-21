@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PortfolioService } from './services/portfolio.service';
-import { Teacher, Course, Work, DownloadItem, EducationItem } from './models/portfolio.models';
+import { Teacher, Course, Work, DownloadItem, EducationItem, StatItem } from './models/portfolio.models';
 
 @Component({
   selector: 'app-root',
@@ -88,10 +88,25 @@ export class AppComponent implements OnInit {
   }
 
   loadAllData(): void {
-    this.portfolio.getTeacher().subscribe(t => this.teacher = t);
+    this.portfolio.getTeacher().subscribe(t => {
+      this.teacher = t;
+      this.updateWorksCountStat();
+    });
     this.portfolio.getCourses().subscribe(c => this.courses = c);
-    this.portfolio.getWorks().subscribe(w => this.works = w);
+    this.portfolio.getWorks().subscribe(w => {
+      this.works = w;
+      this.updateWorksCountStat();
+    });
     this.portfolio.getDownloads().subscribe(d => this.downloads = d);
+  }
+
+  updateWorksCountStat(): void {
+    if (this.teacher && this.teacher.stats) {
+      const workStat = this.teacher.stats.find(s => s.label && (s.label.includes('โครงงาน') || s.label.includes('ผลงาน')));
+      if (workStat) {
+        workStat.value = this.works.length.toString();
+      }
+    }
   }
 
   // --- Secret Authentication ---
@@ -458,6 +473,7 @@ export class AppComponent implements OnInit {
       this.portfolio.createWork(newWork).subscribe({
         next: (saved) => {
           this.works.unshift(saved);
+          this.updateWorksCountStat();
           this.isSavingWork = false;
           this.showToastNotification(`✅ [ยืนยัน 100%] เพิ่มผลงานใหม่เข้า TiDB Cloud สำเร็จ! (${new Date().toLocaleTimeString('th-TH')} น.)`);
           this.closeWorkModal();
@@ -475,6 +491,7 @@ export class AppComponent implements OnInit {
     if (confirm(`คุณต้องการลบผลงาน "${work.title}" หรือไม่?`)) {
       this.portfolio.deleteWork(work.id).subscribe(() => {
         this.works = this.works.filter(w => w.id !== work.id);
+        this.updateWorksCountStat();
         this.showToastNotification('ลบผลงานเรียบร้อยแล้ว');
       });
     }
@@ -613,6 +630,26 @@ export class AppComponent implements OnInit {
   openEditTeacherModal(): void {
     if (this.teacher) {
       this.teacherForm = { ...this.teacher };
+      // Default studentGroup if empty
+      if (!this.teacherForm.studentGroup) {
+        this.teacherForm.studentGroup = 'ปวส.2 สทส2 เลขที่ 12';
+      }
+      // Populate stats with real works count
+      if (this.teacher.stats && this.teacher.stats.length > 0) {
+        this.teacherForm.stats = this.teacher.stats.map(s => {
+          if (s.label && (s.label.includes('โครงงาน') || s.label.includes('ผลงาน'))) {
+            return { ...s, value: this.works.length.toString() };
+          }
+          return { ...s };
+        });
+      } else {
+        this.teacherForm.stats = [
+          { label: 'ระดับชั้น/กลุ่ม', value: 'ปวส.2', unit: 'สทส2 เลขที่ 12' },
+          { label: 'รหัสวิชาหลัก', value: '31901-2009', unit: 'โมบายแอป' },
+          { label: 'โครงงานผลงาน', value: this.works.length.toString(), unit: 'ชิ้นงาน' },
+          { label: 'อาจารย์ผู้สอน', value: 'ครูอ๋อน', unit: 'ที่ปรึกษา' }
+        ];
+      }
       // Populate text helpers
       this.teacherAchievementsText = (this.teacher.academicAchievements || []).join('\n');
       const edu = this.teacher.education || [];
@@ -657,12 +694,23 @@ export class AppComponent implements OnInit {
       }
       this.teacherForm.education = education;
 
+      // Ensure stats has current works count for the projects card
+      if (this.teacherForm.stats) {
+        this.teacherForm.stats = this.teacherForm.stats.map(s => {
+          if (s.label && (s.label.includes('โครงงาน') || s.label.includes('ผลงาน'))) {
+            return { ...s, value: this.works.length.toString() };
+          }
+          return s;
+        });
+      }
+
       this.isSavingTeacher = true;
       this.showToastNotification('☁️ กำลังส่งข้อมูลประวัตินักศึกษาเข้า TiDB Cloud Serverless...');
 
       this.portfolio.updateTeacher(this.teacherForm as Teacher).subscribe({
         next: (updated) => {
           this.teacher = updated;
+          this.updateWorksCountStat();
           this.isSavingTeacher = false;
           this.showToastNotification(`✅ [ยืนยัน 100%] บันทึกข้อมูลประวัตินักศึกษาเข้า TiDB Cloud สำเร็จ! (${new Date().toLocaleTimeString('th-TH')} น.)`);
           this.closeTeacherModal();

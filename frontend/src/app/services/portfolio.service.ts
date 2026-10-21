@@ -50,7 +50,7 @@ export class PortfolioService {
     school: 'วิทยาลัยอาชีวศึกษา / วิทยาลัยเทคนิค (สังกัด สอศ.)',
     department: 'สาขาเทคโนโลยีสารสนเทศ ประเภทวิชาอุตสาหกรรมดิจิทัลและสารสนเทศ',
     instructor: 'อาจารย์ผู้สอน: ครูอ๋อน',
-    studentGroup: 'ปวส.2 สทส2 เลขที่ 12 กลุ่ม 1',
+    studentGroup: 'ปวส.2 สทส2 เลขที่ 12',
     email: 'pusiphong.it@example.ac.th',
     phone: '08x-xxx-xxxx',
     lineId: '@pusiphong_it',
@@ -60,7 +60,7 @@ export class PortfolioService {
     stats: [
       { label: 'ระดับชั้น/กลุ่ม', value: 'ปวส.2', unit: 'สทส2 เลขที่ 12' },
       { label: 'รหัสวิชาหลัก', value: '31901-2009', unit: 'โมบายแอป' },
-      { label: 'โครงงานผลงาน', value: '4+', unit: 'ชิ้นงาน' },
+      { label: 'โครงงานผลงาน', value: '4', unit: 'ชิ้นงาน' },
       { label: 'อาจารย์ผู้สอน', value: 'ครูอ๋อน', unit: 'ที่ปรึกษา' }
     ],
     education: [
