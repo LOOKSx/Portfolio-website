@@ -464,12 +464,14 @@
     <div class="bg-custom-surface border border-custom rounded-3xl max-w-3xl w-full overflow-hidden shadow-2xl relative my-8" (click)="$event.stopPropagation()">
 
       <!-- Close button -->
-      <button (click)="closeWorkDetail()" class="absolute top-4 right-4 z-30 w-10 h-10 rounded-full bg-black/70 hover:bg-black/90 text-white flex items-center justify-center text-lg font-bold shadow-lg transition-all">&#x2715;</button>
+      <button (click)="closeWorkDetail()" class="absolute top-4 right-4 z-30 w-10 h-10 rounded-full bg-black/70 hover:bg-black/90 text-white flex items-center justify-center text-xl font-bold shadow-lg">&#x2715;</button>
 
-      <!-- HERO IMAGE SECTION -->
-      <div class="relative h-72 sm:h-96 w-full bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 overflow-hidden">
-        <div class="absolute inset-0 flex flex-col items-center justify-center select-none pointer-events-none">
-          <span class="text-8xl opacity-20">
+      <!-- ===== HERO IMAGE — click to open lightbox ===== -->
+      <div class="relative h-72 sm:h-96 w-full bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 overflow-hidden group cursor-zoom-in"
+           (click)="openLightbox(selectedDetailImage || selectedWorkForDetail.image)">
+        <!-- Fallback icon -->
+        <div class="absolute inset-0 flex items-center justify-center select-none pointer-events-none">
+          <span class="text-9xl opacity-10">
             @switch(selectedWorkForDetail.category) {
               @case('student') { &#x1F31F; }
               @case('media') { &#x1F4A1; }
@@ -483,11 +485,16 @@
           <img
             [src]="selectedDetailImage || selectedWorkForDetail.image"
             [alt]="selectedWorkForDetail.title"
-            class="absolute inset-0 w-full h-full object-cover transition-all duration-500 z-10"
+            class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 z-10"
             (error)="$any($event.target).classList.add('hidden')">
         }
-        <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent z-20"></div>
-        <div class="absolute bottom-0 inset-x-0 z-30 p-5">
+        <!-- Zoom hint -->
+        <div class="absolute top-3 left-3 z-20 bg-black/60 text-white text-[10px] px-2 py-1 rounded-lg flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          &#x1F50D; คลิกเพื่อดูเต็มจอ
+        </div>
+        <!-- Gradient overlay + title -->
+        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent z-20 pointer-events-none"></div>
+        <div class="absolute bottom-0 inset-x-0 z-30 p-5 pointer-events-none">
           <div class="flex flex-wrap gap-2 mb-2">
             <span class="px-3 py-1 rounded-full text-xs font-bold font-num bg-custom-accent text-white shadow-lg">
               {{ getCourseByWork(selectedWorkForDetail)?.code || '31901-2009' }}
@@ -496,46 +503,94 @@
               {{ selectedWorkForDetail.categoryLabel || selectedWorkForDetail.category }}
             </span>
             @if (selectedWorkForDetail.date) {
-              <span class="px-3 py-1 rounded-full text-xs font-num bg-black/60 text-white/95 shadow">
+              <span class="px-3 py-1 rounded-full text-xs font-num bg-black/60 text-white/95">
                 {{ selectedWorkForDetail.date }}
               </span>
             }
           </div>
-          <h3 class="text-xl sm:text-2xl font-bold text-white leading-tight drop-shadow-lg">
-            {{ selectedWorkForDetail.title }}
-          </h3>
+          <h3 class="text-xl sm:text-2xl font-bold text-white leading-tight drop-shadow-lg">{{ selectedWorkForDetail.title }}</h3>
         </div>
       </div>
 
-      <!-- GALLERY THUMBNAIL STRIP -->
-      @if (selectedWorkForDetail.galleryList && selectedWorkForDetail.galleryList.length > 0) {
-        <div class="px-5 py-3 bg-custom-subtle/70 border-b border-custom">
-          <p class="text-[11px] font-semibold text-custom-muted mb-2">&#x1F5BC;&#xFE0F; รูปภาพผลงาน {{ selectedWorkForDetail.galleryList.length + 1 }} รูป</p>
-          <div class="flex gap-2 overflow-x-auto pb-1">
-            <button type="button" (click)="setDetailImage(selectedWorkForDetail.image)"
-              class="relative flex-shrink-0 w-20 h-14 rounded-xl overflow-hidden border-2 transition-all hover:scale-105"
-              [class.border-custom-accent]="!selectedDetailImage || selectedDetailImage === selectedWorkForDetail.image"
-              [class.border-transparent]="selectedDetailImage && selectedDetailImage !== selectedWorkForDetail.image">
-              <img [src]="selectedWorkForDetail.image" class="w-full h-full object-cover" alt="cover" (error)="$any($event.target).style.display='none'">
-              <span class="absolute bottom-0 inset-x-0 bg-black/70 text-[9px] text-white text-center py-0.5 font-medium">หน้าปก</span>
-            </button>
-            @for (gImg of selectedWorkForDetail.galleryList; track $index) {
+      <!-- ===== GALLERY STRIP ===== -->
+      <div class="px-5 py-4 bg-custom-subtle/60 border-b border-custom">
+        <p class="text-[11px] font-bold text-custom-muted uppercase tracking-widest mb-3">
+          &#x1F5BC;&#xFE0F; รูปภาพผลงาน
+          @if (selectedWorkForDetail.galleryList && selectedWorkForDetail.galleryList.length > 0) {
+            ({{ selectedWorkForDetail.galleryList.length + 1 }} รูป)
+          }
+        </p>
+        <div class="flex gap-2 overflow-x-auto pb-2">
+          <!-- Cover thumb -->
+          @if (selectedWorkForDetail.image) {
+            <div class="relative flex-shrink-0 group/thumb">
+              <button type="button" (click)="setDetailImage(selectedWorkForDetail.image)"
+                class="relative w-24 h-16 rounded-xl overflow-hidden border-2 transition-all hover:scale-105 block"
+                [class.border-custom-accent]="!selectedDetailImage || selectedDetailImage === selectedWorkForDetail.image"
+                [class.border-transparent]="selectedDetailImage && selectedDetailImage !== selectedWorkForDetail.image">
+                <img [src]="selectedWorkForDetail.image" class="w-full h-full object-cover" alt="cover"
+                     (error)="$any($event.target).style.display='none'">
+                <span class="absolute bottom-0 inset-x-0 bg-black/70 text-[9px] text-white text-center py-0.5 font-medium">หน้าปก</span>
+              </button>
+              <!-- Zoom icon on hover -->
+              <button type="button" (click)="openLightbox(selectedWorkForDetail.image)"
+                class="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/70 text-white text-[9px] items-center justify-center hidden group-hover/thumb:flex z-10">
+                &#x1F50D;
+              </button>
+            </div>
+          }
+          <!-- Gallery thumbs -->
+          @for (gImg of selectedWorkForDetail.galleryList; track $index) {
+            <div class="relative flex-shrink-0 group/thumb">
               <button type="button" (click)="setDetailImage(gImg)"
-                class="relative flex-shrink-0 w-20 h-14 rounded-xl overflow-hidden border-2 transition-all hover:scale-105"
+                class="relative w-24 h-16 rounded-xl overflow-hidden border-2 transition-all hover:scale-105 block"
                 [class.border-custom-accent]="selectedDetailImage === gImg"
                 [class.border-transparent]="selectedDetailImage !== gImg">
-                <img [src]="gImg" class="w-full h-full object-cover" [alt]="'img ' + ($index + 1)" (error)="$any($event.target).style.display='none'">
+                <img [src]="gImg" class="w-full h-full object-cover" [alt]="'img ' + ($index + 1)"
+                     (error)="$any($event.target).style.display='none'">
                 <span class="absolute bottom-0 inset-x-0 bg-black/70 text-[9px] text-white text-center py-0.5">#{{ $index + 1 }}</span>
               </button>
-            }
-          </div>
-        </div>
-      }
+              <button type="button" (click)="openLightbox(gImg)"
+                class="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/70 text-white text-[9px] items-center justify-center hidden group-hover/thumb:flex z-10">
+                &#x1F50D;
+              </button>
+              @if (portfolio.isEditMode()) {
+                <button type="button" (click)="removeGalleryFromDetail($index)"
+                  class="absolute top-1 left-1 w-5 h-5 rounded-full bg-red-600/90 text-white text-[9px] items-center justify-center hidden group-hover/thumb:flex z-10">
+                  &#x2715;
+                </button>
+              }
+            </div>
+          }
 
-      <!-- MAIN CONTENT -->
+          <!-- Add photo button (always in edit mode, also visible to anyone as URL input) -->
+          @if (portfolio.isEditMode()) {
+            <label class="flex-shrink-0 w-24 h-16 rounded-xl border-2 border-dashed border-custom hover:border-custom-accent bg-custom-subtle/60 flex flex-col items-center justify-center gap-1 cursor-pointer transition-colors group/add">
+              <span class="text-xl group-hover/add:scale-110 transition-transform">+</span>
+              <span class="text-[9px] text-custom-muted">เพิ่มรูป</span>
+              <input type="file" accept="image/*" multiple class="hidden" (change)="quickUploadGalleryFromDetail($event)">
+            </label>
+          }
+        </div>
+
+        <!-- Quick add by URL (edit mode) -->
+        @if (portfolio.isEditMode()) {
+          <div class="mt-3 flex gap-2">
+            <input type="url" [(ngModel)]="detailQuickGalleryUrl"
+              placeholder="หรือวาง URL รูปภาพ..."
+              class="flex-1 px-3 py-1.5 rounded-xl bg-custom-surface border border-custom text-custom-main text-xs focus:border-custom-accent outline-none">
+            <button type="button" (click)="quickAddGalleryFromDetail()"
+              class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium transition-colors">
+              + เพิ่ม
+            </button>
+          </div>
+        }
+      </div>
+
+      <!-- ===== CONTENT BODY ===== -->
       <div class="p-6 sm:p-8 space-y-5">
 
-        <!-- Student + Info Cards Row -->
+        <!-- Student + Info Cards -->
         <div class="flex flex-wrap gap-3 pb-4 border-b border-custom">
           @if (selectedWorkForDetail.studentName) {
             <div class="flex items-center gap-2.5 bg-custom-subtle px-4 py-2.5 rounded-2xl flex-1 min-w-[200px]">
@@ -573,6 +628,28 @@
           </div>
         }
 
+        <!-- Change cover image (edit mode only) -->
+        @if (portfolio.isEditMode()) {
+          <div class="p-4 rounded-2xl border-2 border-dashed border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/20">
+            <p class="text-[11px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-widest mb-3">&#x1F5BC;&#xFE0F; เปลี่ยนรูปหน้าปก</p>
+            <div class="flex flex-wrap gap-2">
+              <label class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold cursor-pointer transition-colors flex items-center gap-1.5">
+                &#x1F4C1; เลือกไฟล์จากเครื่อง
+                <input type="file" accept="image/*" class="hidden" (change)="quickUploadCoverFromDetail($event)">
+              </label>
+              <input type="url" [(ngModel)]="detailQuickCoverUrl"
+                placeholder="หรือวาง URL รูปภาพ..."
+                class="flex-1 min-w-[180px] px-3 py-2 rounded-xl bg-white dark:bg-stone-900 border border-amber-300 dark:border-amber-700 text-custom-main text-xs focus:border-amber-500 outline-none">
+              @if (detailQuickCoverUrl) {
+                <button type="button" (click)="applyDetailCoverUrl()"
+                  class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors">
+                  &#x2714; ใช้ URL นี้
+                </button>
+              }
+            </div>
+          </div>
+        }
+
         <!-- Description -->
         @if (selectedWorkForDetail.description) {
           <div class="p-4 rounded-2xl bg-custom-subtle/60 border border-custom">
@@ -587,29 +664,40 @@
             <p class="text-[11px] font-bold text-custom-muted uppercase tracking-widest mb-2.5">&#x1F3F7;&#xFE0F; ทักษะและเทคโนโลยีที่ใช้</p>
             <div class="flex flex-wrap gap-2">
               @for (tag of selectedWorkForDetail.tagsList; track tag) {
-                <span class="px-3 py-1.5 text-xs rounded-full bg-custom-accent/10 text-custom-accent font-semibold border border-custom-accent/25">
-                  #{{ tag }}
-                </span>
+                <span class="px-3 py-1.5 text-xs rounded-full bg-custom-accent/10 text-custom-accent font-semibold border border-custom-accent/25">#{{ tag }}</span>
               }
             </div>
           </div>
         }
 
-        <!-- No image notice -->
-        @if (!selectedWorkForDetail.image) {
-          <div class="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 flex items-center gap-2 text-xs text-amber-700 dark:text-amber-300">
-            <span>&#x1F4F7;</span>
-            <span>ยังไม่มีรูปภาพผลงาน — @if (portfolio.isEditMode()) { กด "แก้ไข / เพิ่มรูปภาพ" เพื่ออัปโหลดได้เลย }</span>
-          </div>
-        }
+        <!-- Link / Download -->
+        <div class="p-4 rounded-2xl bg-custom-subtle/60 border border-custom">
+          <p class="text-[11px] font-bold text-custom-muted uppercase tracking-widest mb-3">&#x1F517; ลิงก์ผลงาน</p>
+          @if (selectedWorkForDetail.link && selectedWorkForDetail.link !== '#') {
+            <a [href]="selectedWorkForDetail.link" target="_blank"
+               class="flex items-center gap-2 text-sm text-custom-accent hover:underline font-medium break-all">
+              <span class="text-lg flex-shrink-0">&#x1F310;</span>
+              {{ selectedWorkForDetail.link }}
+            </a>
+            @if (selectedWorkForDetail.downloadText) {
+              <p class="text-xs text-custom-muted mt-1 ml-7">{{ selectedWorkForDetail.downloadText }}</p>
+            }
+          } @else {
+            <p class="text-sm text-custom-muted">ยังไม่มีลิงก์ผลงาน
+              @if (portfolio.isEditMode()) {
+                — กดแก้ไขเพื่อเพิ่มลิงก์
+              }
+            </p>
+          }
+        </div>
 
         <!-- Action Buttons -->
-        <div class="pt-4 border-t border-custom flex items-center justify-between gap-3 flex-wrap">
+        <div class="pt-2 border-t border-custom flex items-center justify-between gap-3 flex-wrap">
           <div>
             @if (portfolio.isEditMode()) {
               <button (click)="editWorkFromDetail()"
                 class="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-amber-500 hover:bg-amber-600 text-white flex items-center gap-2 shadow-md transition-all">
-                &#x270F;&#xFE0F; แก้ไข / เพิ่มรูปภาพ
+                &#x270F;&#xFE0F; แก้ไขข้อมูลทั้งหมด
               </button>
             }
           </div>
@@ -621,7 +709,7 @@
             @if (selectedWorkForDetail.link && selectedWorkForDetail.link !== '#') {
               <a [href]="selectedWorkForDetail.link" target="_blank"
                  class="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-custom-accent text-white hover:opacity-90 shadow-md flex items-center gap-1.5">
-                &#x1F517; {{ selectedWorkForDetail.downloadText || 'ดูเพิ่มเติม' }}
+                &#x1F517; {{ selectedWorkForDetail.downloadText || 'เปิดลิงก์' }}
               </a>
             }
           </div>
@@ -629,6 +717,18 @@
 
       </div>
     </div>
+  </div>
+}
+
+<!-- ===== LIGHTBOX ===== -->
+@if (showLightbox && lightboxImage) {
+  <div class="fixed inset-0 z-[9999] bg-black/95 flex items-center justify-center p-4" (click)="closeLightbox()">
+    <button (click)="closeLightbox()" class="absolute top-4 right-4 w-11 h-11 rounded-full bg-white/10 hover:bg-white/25 text-white text-2xl flex items-center justify-center transition-all z-10">&#x2715;</button>
+    <img [src]="lightboxImage" alt="รูปภาพเต็ม"
+         class="max-w-full max-h-[90vh] rounded-2xl shadow-2xl object-contain"
+         (click)="$event.stopPropagation()"
+         (error)="$any($event.target).style.display='none'">
+    <p class="absolute bottom-5 inset-x-0 text-center text-white/50 text-xs">คลิกพื้นที่ด้านนอกเพื่อปิด</p>
   </div>
 }
 

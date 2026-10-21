@@ -55,6 +55,14 @@ export class AppComponent implements OnInit {
   newInsideImageUrl: string = '';
   selectedDetailImage: string = '';
 
+  // Lightbox State
+  lightboxImage: string = '';
+  showLightbox: boolean = false;
+
+  // Quick-upload from Detail Modal
+  detailQuickCoverUrl: string = '';
+  detailQuickGalleryUrl: string = '';
+
   // Form helpers for Teacher Education & Achievements
   teacherAchievementsText: string = '';
   teacherEdu1Degree: string = '';
@@ -184,15 +192,146 @@ export class AppComponent implements OnInit {
   openWorkDetail(work: Work): void {
     this.selectedWorkForDetail = work;
     this.selectedDetailImage = work.image || '';
+    this.detailQuickCoverUrl = '';
+    this.detailQuickGalleryUrl = '';
   }
 
   closeWorkDetail(): void {
     this.selectedWorkForDetail = null;
     this.selectedDetailImage = '';
+    this.closeLightbox();
   }
 
   setDetailImage(img: string): void {
     this.selectedDetailImage = img;
+  }
+
+  // Lightbox
+  openLightbox(img: string): void {
+    if (!img) return;
+    this.lightboxImage = img;
+    this.showLightbox = true;
+  }
+
+  closeLightbox(): void {
+    this.showLightbox = false;
+    this.lightboxImage = '';
+  }
+
+  // Quick upload cover image from Detail Modal (saves immediately to TiDB)
+  quickUploadCoverFromDetail(event: Event): void {
+    if (!this.selectedWorkForDetail) return;
+    const input = event.target as HTMLInputElement;
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    const sizeKb = (file.size / 1024).toFixed(1);
+    this.showToastNotification(`⏳ กำลังอ่านรูปภาพ (${sizeKb} KB)...`);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      if (result && this.selectedWorkForDetail) {
+        this.showToastNotification('☁️ กำลังบันทึกรูปหน้าปกเข้า TiDB Cloud...');
+        const updatedWork: Work = { ...this.selectedWorkForDetail, image: result };
+        this.portfolio.updateWork(this.selectedWorkForDetail.id, updatedWork).subscribe({
+          next: (res) => {
+            const idx = this.works.findIndex(w => w.id === res.id);
+            if (idx !== -1) this.works[idx] = res;
+            this.selectedWorkForDetail = res;
+            this.selectedDetailImage = res.image;
+            this.detailQuickCoverUrl = '';
+            this.showToastNotification(`✅ อัปโหลดรูปหน้าปกเรียบร้อย (${sizeKb} KB) — บันทึกใน TiDB Cloud แล้ว`);
+          },
+          error: () => this.showToastNotification('❌ ไม่สามารถบันทึกรูปภาพได้')
+        });
+      }
+    };
+    reader.readAsDataURL(file);
+    input.value = '';
+  }
+
+  // Quick add gallery image from Detail Modal by URL
+  quickAddGalleryFromDetail(): void {
+    if (!this.selectedWorkForDetail || !this.detailQuickGalleryUrl.trim()) return;
+    const url = this.detailQuickGalleryUrl.trim();
+    const currentList = [...(this.selectedWorkForDetail.galleryList || []), url];
+    const updatedWork: Work = {
+      ...this.selectedWorkForDetail,
+      galleryList: currentList,
+      galleryImages: JSON.stringify(currentList)
+    };
+    this.showToastNotification('☁️ กำลังบันทึกรูปเข้า TiDB Cloud...');
+    this.portfolio.updateWork(this.selectedWorkForDetail.id, updatedWork).subscribe({
+      next: (res) => {
+        const idx = this.works.findIndex(w => w.id === res.id);
+        if (idx !== -1) this.works[idx] = res;
+        this.selectedWorkForDetail = res;
+        this.detailQuickGalleryUrl = '';
+        this.showToastNotification('✅ เพิ่มรูปในแกลเลอรีเรียบร้อย — บันทึกใน TiDB Cloud แล้ว');
+      },
+      error: () => this.showToastNotification('❌ ไม่สามารถบันทึกรูปภาพได้')
+    });
+  }
+
+  // Quick upload gallery image from file in Detail Modal
+  quickUploadGalleryFromDetail(event: Event): void {
+    if (!this.selectedWorkForDetail) return;
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+    const files = Array.from(input.files);
+    let loaded = 0;
+    const results: string[] = [];
+    this.showToastNotification(`⏳ กำลังอ่าน ${files.length} รูป...`);
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const res = e.target?.result as string;
+        if (res) results.push(res);
+        loaded++;
+        if (loaded === files.length && this.selectedWorkForDetail) {
+          const currentList = [...(this.selectedWorkForDetail.galleryList || []), ...results];
+          const updatedWork: Work = {
+            ...this.selectedWorkForDetail,
+            galleryList: currentList,
+            galleryImages: JSON.stringify(currentList)
+          };
+          this.showToastNotification('☁️ กำลังบันทึกรูปเข้า TiDB Cloud...');
+          this.portfolio.updateWork(this.selectedWorkForDetail.id, updatedWork).subscribe({
+            next: (saved) => {
+              const idx = this.works.findIndex(w => w.id === saved.id);
+              if (idx !== -1) this.works[idx] = saved;
+              this.selectedWorkForDetail = saved;
+              this.showToastNotification(`✅ อัปโหลด ${results.length} รูปเรียบร้อย — บันทึกใน TiDB Cloud แล้ว`);
+            },
+            error: () => this.showToastNotification('❌ ไม่สามารถบันทึกรูปภาพได้')
+          });
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+    input.value = '';
+  }
+
+  // Remove gallery image from Detail Modal
+  removeGalleryFromDetail(idx: number): void {
+    if (!this.selectedWorkForDetail) return;
+    const currentList = [...(this.selectedWorkForDetail.galleryList || [])];
+    currentList.splice(idx, 1);
+    const updatedWork: Work = {
+      ...this.selectedWorkForDetail,
+      galleryList: currentList,
+      galleryImages: JSON.stringify(currentList)
+    };
+    this.showToastNotification('☁️ กำลังลบรูปและซิงก์เข้า TiDB Cloud...');
+    this.portfolio.updateWork(this.selectedWorkForDetail.id, updatedWork).subscribe({
+      next: (res) => {
+        const idx2 = this.works.findIndex(w => w.id === res.id);
+        if (idx2 !== -1) this.works[idx2] = res;
+        this.selectedWorkForDetail = res;
+        if (this.selectedDetailImage === currentList[idx]) this.selectedDetailImage = res.image || '';
+        this.showToastNotification('✅ ลบรูปเรียบร้อย — บันทึกใน TiDB Cloud แล้ว');
+      },
+      error: () => this.showToastNotification('❌ ไม่สามารถลบรูปภาพได้')
+    });
   }
 
   // --- Work CRUD ---
@@ -660,6 +799,25 @@ export class AppComponent implements OnInit {
       };
       reader.readAsDataURL(file);
     }
+  }
+
+  // Apply cover URL from Detail Modal
+  applyDetailCoverUrl(): void {
+    if (!this.selectedWorkForDetail || !this.detailQuickCoverUrl.trim()) return;
+    const url = this.detailQuickCoverUrl.trim();
+    this.showToastNotification('☁️ กำลังบันทึกรูปหน้าปกเข้า TiDB Cloud...');
+    const updatedWork: Work = { ...this.selectedWorkForDetail, image: url };
+    this.portfolio.updateWork(this.selectedWorkForDetail.id, updatedWork).subscribe({
+      next: (res) => {
+        const idx = this.works.findIndex(w => w.id === res.id);
+        if (idx !== -1) this.works[idx] = res;
+        this.selectedWorkForDetail = res;
+        this.selectedDetailImage = res.image;
+        this.detailQuickCoverUrl = '';
+        this.showToastNotification('✅ อัปเดตรูปหน้าปกเรียบร้อย — บันทึกใน TiDB Cloud แล้ว');
+      },
+      error: () => this.showToastNotification('❌ ไม่สามารถบันทึกรูปภาพได้')
+    });
   }
 
   editWorkFromDetail(): void {
