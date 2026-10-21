@@ -1,4 +1,4 @@
-<!-- =========================================================================
+﻿<!-- =========================================================================
      1. Navigation Header
      ========================================================================= -->
 <header class="border-b border-custom bg-custom-surface/90 backdrop-blur-md sticky top-0 z-40 transition-colors">
@@ -460,52 +460,71 @@
      4. MODAL: ดูรายละเอียดผลงาน (Work Detail Modal)
      ========================================================================= -->
 @if (selectedWorkForDetail) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center modal-backdrop p-4 overflow-y-auto" (click)="closeWorkDetail()">
-    <div class="bg-custom-surface border border-custom rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl relative my-8" (click)="$event.stopPropagation()">
-      <button (click)="closeWorkDetail()" class="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center text-lg">✕</button>
+  <div class="fixed inset-0 z-50 flex items-start justify-center modal-backdrop p-4 overflow-y-auto" (click)="closeWorkDetail()">
+    <div class="bg-custom-surface border border-custom rounded-3xl max-w-3xl w-full overflow-hidden shadow-2xl relative my-8" (click)="$event.stopPropagation()">
 
-      <!-- Main Display Image (Cover / fallback) -->
-      <div class="h-64 sm:h-80 w-full overflow-hidden bg-gradient-to-br from-stone-700 to-stone-900 relative">
+      <!-- Close button -->
+      <button (click)="closeWorkDetail()" class="absolute top-4 right-4 z-30 w-10 h-10 rounded-full bg-black/70 hover:bg-black/90 text-white flex items-center justify-center text-lg font-bold shadow-lg transition-all">&#x2715;</button>
+
+      <!-- HERO IMAGE SECTION -->
+      <div class="relative h-72 sm:h-96 w-full bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 overflow-hidden">
+        <div class="absolute inset-0 flex flex-col items-center justify-center select-none pointer-events-none">
+          <span class="text-8xl opacity-20">
+            @switch(selectedWorkForDetail.category) {
+              @case('student') { &#x1F31F; }
+              @case('media') { &#x1F4A1; }
+              @case('plan') { &#x1F4D1; }
+              @case('award') { &#x1F3C6; }
+              @default { &#x1F4C2; }
+            }
+          </span>
+        </div>
         @if (selectedDetailImage || selectedWorkForDetail.image) {
-          <img [src]="selectedDetailImage || selectedWorkForDetail.image"
-               [alt]="selectedWorkForDetail.title"
-               class="w-full h-full object-cover transition-all duration-300"
-               (error)="$any($event.target).style.display='none'">
+          <img
+            [src]="selectedDetailImage || selectedWorkForDetail.image"
+            [alt]="selectedWorkForDetail.title"
+            class="absolute inset-0 w-full h-full object-cover transition-all duration-500 z-10"
+            (error)="$any($event.target).classList.add('hidden')">
         }
-        <!-- Overlay badges -->
-        <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent p-4 flex items-end gap-2">
-          <span class="px-2.5 py-1 rounded-lg text-xs font-bold font-num bg-custom-accent text-white shadow">
-            {{ getCourseByWork(selectedWorkForDetail)?.code || '31901-2009' }}
-          </span>
-          <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-white/90 text-stone-900 shadow">
-            {{ selectedWorkForDetail.categoryLabel || selectedWorkForDetail.category }}
-          </span>
-          @if (selectedWorkForDetail.date) {
-            <span class="ml-auto px-2.5 py-1 rounded-lg text-xs font-num bg-black/50 text-white/90">
-              📅 {{ selectedWorkForDetail.date }}
+        <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent z-20"></div>
+        <div class="absolute bottom-0 inset-x-0 z-30 p-5">
+          <div class="flex flex-wrap gap-2 mb-2">
+            <span class="px-3 py-1 rounded-full text-xs font-bold font-num bg-custom-accent text-white shadow-lg">
+              {{ getCourseByWork(selectedWorkForDetail)?.code || '31901-2009' }}
             </span>
-          }
+            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-white/95 text-stone-900 shadow-lg">
+              {{ selectedWorkForDetail.categoryLabel || selectedWorkForDetail.category }}
+            </span>
+            @if (selectedWorkForDetail.date) {
+              <span class="px-3 py-1 rounded-full text-xs font-num bg-black/60 text-white/95 shadow">
+                {{ selectedWorkForDetail.date }}
+              </span>
+            }
+          </div>
+          <h3 class="text-xl sm:text-2xl font-bold text-white leading-tight drop-shadow-lg">
+            {{ selectedWorkForDetail.title }}
+          </h3>
         </div>
       </div>
 
-      <!-- Thumbnail Strip for Gallery Images -->
+      <!-- GALLERY THUMBNAIL STRIP -->
       @if (selectedWorkForDetail.galleryList && selectedWorkForDetail.galleryList.length > 0) {
-        <div class="px-5 py-3 bg-custom-subtle/60 border-b border-custom">
-          <p class="text-xs font-semibold text-custom-muted mb-2">🖼️ รูปภาพผลงาน ({{ selectedWorkForDetail.galleryList.length + 1 }} รูป — คลิกเพื่อดู)</p>
+        <div class="px-5 py-3 bg-custom-subtle/70 border-b border-custom">
+          <p class="text-[11px] font-semibold text-custom-muted mb-2">&#x1F5BC;&#xFE0F; รูปภาพผลงาน {{ selectedWorkForDetail.galleryList.length + 1 }} รูป</p>
           <div class="flex gap-2 overflow-x-auto pb-1">
             <button type="button" (click)="setDetailImage(selectedWorkForDetail.image)"
-              class="relative flex-shrink-0 w-16 h-12 rounded-lg overflow-hidden border-2 transition-all"
-              [class.border-custom-accent]="(selectedDetailImage || selectedWorkForDetail.image) === selectedWorkForDetail.image"
-              [class.border-transparent]="(selectedDetailImage || selectedWorkForDetail.image) !== selectedWorkForDetail.image">
-              <img [src]="selectedWorkForDetail.image" class="w-full h-full object-cover" alt="หน้าปก">
-              <span class="absolute bottom-0 inset-x-0 bg-black/70 text-[9px] text-white text-center py-0.5">หน้าปก</span>
+              class="relative flex-shrink-0 w-20 h-14 rounded-xl overflow-hidden border-2 transition-all hover:scale-105"
+              [class.border-custom-accent]="!selectedDetailImage || selectedDetailImage === selectedWorkForDetail.image"
+              [class.border-transparent]="selectedDetailImage && selectedDetailImage !== selectedWorkForDetail.image">
+              <img [src]="selectedWorkForDetail.image" class="w-full h-full object-cover" alt="cover" (error)="$any($event.target).style.display='none'">
+              <span class="absolute bottom-0 inset-x-0 bg-black/70 text-[9px] text-white text-center py-0.5 font-medium">หน้าปก</span>
             </button>
             @for (gImg of selectedWorkForDetail.galleryList; track $index) {
               <button type="button" (click)="setDetailImage(gImg)"
-                class="relative flex-shrink-0 w-16 h-12 rounded-lg overflow-hidden border-2 transition-all"
+                class="relative flex-shrink-0 w-20 h-14 rounded-xl overflow-hidden border-2 transition-all hover:scale-105"
                 [class.border-custom-accent]="selectedDetailImage === gImg"
                 [class.border-transparent]="selectedDetailImage !== gImg">
-                <img [src]="gImg" class="w-full h-full object-cover" [alt]="'รูป ' + ($index + 1)">
+                <img [src]="gImg" class="w-full h-full object-cover" [alt]="'img ' + ($index + 1)" (error)="$any($event.target).style.display='none'">
                 <span class="absolute bottom-0 inset-x-0 bg-black/70 text-[9px] text-white text-center py-0.5">#{{ $index + 1 }}</span>
               </button>
             }
@@ -513,77 +532,96 @@
         </div>
       }
 
-      <!-- Content -->
+      <!-- MAIN CONTENT -->
       <div class="p-6 sm:p-8 space-y-5">
 
-        <!-- Title + student -->
-        <div>
-          <h3 class="text-xl sm:text-2xl font-heading font-bold text-custom-main leading-snug mb-2">
-            {{ selectedWorkForDetail.title }}
-          </h3>
+        <!-- Student + Info Cards Row -->
+        <div class="flex flex-wrap gap-3 pb-4 border-b border-custom">
           @if (selectedWorkForDetail.studentName) {
-            <div class="flex items-center gap-2 text-sm text-custom-muted">
-              <span class="text-lg">👤</span>
-              <span class="font-medium">{{ selectedWorkForDetail.studentName }}</span>
+            <div class="flex items-center gap-2.5 bg-custom-subtle px-4 py-2.5 rounded-2xl flex-1 min-w-[200px]">
+              <span class="text-2xl">&#x1F464;</span>
+              <div>
+                <p class="text-[10px] text-custom-muted uppercase tracking-wide font-semibold">ผู้จัดทำ / นักเรียน</p>
+                <p class="text-sm font-bold text-custom-main">{{ selectedWorkForDetail.studentName }}</p>
+              </div>
             </div>
           }
+          <div class="flex items-center gap-2.5 bg-custom-accent/10 border border-custom-accent/25 px-4 py-2.5 rounded-2xl">
+            <span class="text-2xl">&#x1F4DA;</span>
+            <div>
+              <p class="text-[10px] text-custom-muted uppercase tracking-wide font-semibold">รายวิชา</p>
+              <p class="text-sm font-bold text-custom-accent font-num">{{ getCourseByWork(selectedWorkForDetail)?.code || '31901-2009' }}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2.5 bg-custom-subtle px-4 py-2.5 rounded-2xl">
+            <span class="text-2xl">&#x1F4C2;</span>
+            <div>
+              <p class="text-[10px] text-custom-muted uppercase tracking-wide font-semibold">ประเภทผลงาน</p>
+              <p class="text-sm font-bold text-custom-main">{{ selectedWorkForDetail.categoryLabel || selectedWorkForDetail.category }}</p>
+            </div>
+          </div>
         </div>
 
-        <!-- Info Cards Row -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          <div class="bg-custom-subtle rounded-xl p-3 text-center">
-            <p class="text-[10px] text-custom-muted uppercase tracking-wide mb-1">รายวิชา</p>
-            <p class="text-xs font-bold text-custom-accent font-num">{{ getCourseByWork(selectedWorkForDetail)?.code || '31901-2009' }}</p>
-          </div>
-          <div class="bg-custom-subtle rounded-xl p-3 text-center">
-            <p class="text-[10px] text-custom-muted uppercase tracking-wide mb-1">ประเภท</p>
-            <p class="text-xs font-semibold text-custom-main">{{ selectedWorkForDetail.categoryLabel || selectedWorkForDetail.category }}</p>
-          </div>
-          @if (selectedWorkForDetail.date) {
-            <div class="bg-custom-subtle rounded-xl p-3 text-center col-span-2 sm:col-span-1">
-              <p class="text-[10px] text-custom-muted uppercase tracking-wide mb-1">วันที่</p>
-              <p class="text-xs font-num font-semibold text-custom-main">{{ selectedWorkForDetail.date }}</p>
+        <!-- Course full name -->
+        @if (getCourseByWork(selectedWorkForDetail)?.name) {
+          <div class="p-3.5 rounded-2xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/50 flex items-start gap-3">
+            <span class="text-blue-500 text-xl flex-shrink-0 mt-0.5">&#x1F393;</span>
+            <div>
+              <p class="text-[10px] text-blue-500 dark:text-blue-400 font-bold uppercase tracking-widest mb-0.5">ชื่อรายวิชา</p>
+              <p class="text-sm font-semibold text-blue-800 dark:text-blue-200">{{ getCourseByWork(selectedWorkForDetail)?.name }}</p>
             </div>
-          }
-        </div>
+          </div>
+        }
 
         <!-- Description -->
         @if (selectedWorkForDetail.description) {
-          <div class="bg-custom-subtle/50 rounded-xl p-4">
-            <p class="text-xs font-semibold text-custom-muted uppercase tracking-wide mb-2">📝 รายละเอียดผลงาน</p>
-            <p class="text-sm text-custom-main leading-relaxed whitespace-pre-line">{{ selectedWorkForDetail.description }}</p>
+          <div class="p-4 rounded-2xl bg-custom-subtle/60 border border-custom">
+            <p class="text-[11px] font-bold text-custom-muted uppercase tracking-widest mb-3">&#x1F4DD; รายละเอียดผลงาน</p>
+            <p class="text-sm sm:text-base text-custom-main leading-relaxed whitespace-pre-line">{{ selectedWorkForDetail.description }}</p>
           </div>
         }
 
         <!-- Tags -->
         @if (selectedWorkForDetail.tagsList && selectedWorkForDetail.tagsList.length > 0) {
           <div>
-            <p class="text-xs font-semibold text-custom-muted mb-2">🏷️ แท็กที่เกี่ยวข้อง</p>
-            <div class="flex flex-wrap gap-1.5">
+            <p class="text-[11px] font-bold text-custom-muted uppercase tracking-widest mb-2.5">&#x1F3F7;&#xFE0F; ทักษะและเทคโนโลยีที่ใช้</p>
+            <div class="flex flex-wrap gap-2">
               @for (tag of selectedWorkForDetail.tagsList; track tag) {
-                <span class="px-2.5 py-1 text-xs rounded-lg bg-custom-accent/10 text-custom-accent font-medium border border-custom-accent/20">#{{ tag }}</span>
+                <span class="px-3 py-1.5 text-xs rounded-full bg-custom-accent/10 text-custom-accent font-semibold border border-custom-accent/25">
+                  #{{ tag }}
+                </span>
               }
             </div>
           </div>
         }
 
-        <!-- Actions -->
-        <div class="pt-3 border-t border-custom flex items-center justify-between gap-2 flex-wrap">
+        <!-- No image notice -->
+        @if (!selectedWorkForDetail.image) {
+          <div class="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 flex items-center gap-2 text-xs text-amber-700 dark:text-amber-300">
+            <span>&#x1F4F7;</span>
+            <span>ยังไม่มีรูปภาพผลงาน — @if (portfolio.isEditMode()) { กด "แก้ไข / เพิ่มรูปภาพ" เพื่ออัปโหลดได้เลย }</span>
+          </div>
+        }
+
+        <!-- Action Buttons -->
+        <div class="pt-4 border-t border-custom flex items-center justify-between gap-3 flex-wrap">
           <div>
             @if (portfolio.isEditMode()) {
-              <button (click)="editWorkFromDetail()" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-amber-500 hover:bg-amber-600 text-white flex items-center gap-1.5 shadow">
-                ✏️ แก้ไขผลงาน
+              <button (click)="editWorkFromDetail()"
+                class="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-amber-500 hover:bg-amber-600 text-white flex items-center gap-2 shadow-md transition-all">
+                &#x270F;&#xFE0F; แก้ไข / เพิ่มรูปภาพ
               </button>
             }
           </div>
           <div class="flex items-center gap-2">
-            <button (click)="closeWorkDetail()" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-medium border border-custom hover:bg-custom-subtle text-custom-muted transition-colors">
+            <button (click)="closeWorkDetail()"
+              class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium border border-custom hover:bg-custom-subtle text-custom-muted transition-colors">
               ปิด
             </button>
             @if (selectedWorkForDetail.link && selectedWorkForDetail.link !== '#') {
               <a [href]="selectedWorkForDetail.link" target="_blank"
-                 class="px-5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-custom-accent text-white hover:opacity-90 shadow transition-all">
-                {{ selectedWorkForDetail.downloadText || 'ดูรายละเอียดเพิ่มเติม' }}
+                 class="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-custom-accent text-white hover:opacity-90 shadow-md flex items-center gap-1.5">
+                &#x1F517; {{ selectedWorkForDetail.downloadText || 'ดูเพิ่มเติม' }}
               </a>
             }
           </div>
