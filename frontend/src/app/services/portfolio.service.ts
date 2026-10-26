@@ -198,6 +198,18 @@ export class PortfolioService {
   private setCache(key: string, value: any): void {
     if (typeof window === 'undefined') return;
     try {
+      if (key === 'kruaon_tidb_works' && Array.isArray(value)) {
+        // Strip heavy fileData from localStorage to prevent QuotaExceededError
+        const sanitized = value.map(w => {
+          const copy = { ...w };
+          if (copy.fileData && copy.fileData.length > 500) {
+            delete copy.fileData;
+          }
+          return copy;
+        });
+        localStorage.setItem(key, JSON.stringify(sanitized));
+        return;
+      }
       localStorage.setItem(key, JSON.stringify(value));
     } catch (e) {
       // Ignore if quota or private mode
@@ -404,14 +416,10 @@ export class PortfolioService {
         this.lastSaveStatus.set('ซิงก์เข้า TiDB Cloud สำเร็จ 100%');
         this.lastSavedAt.set(new Date().toLocaleTimeString('th-TH'));
       }),
-      catchError(() => {
-        const enriched = this.enrichWork(work);
-        this.fallbackWorks.unshift(enriched);
-        this.setCache('kruaon_tidb_works', this.fallbackWorks);
+      catchError((err) => {
         this.isSaving.set(false);
-        this.lastSaveStatus.set('บันทึกใน Local Cache เรียบร้อย');
-        this.lastSavedAt.set(new Date().toLocaleTimeString('th-TH'));
-        return of(enriched);
+        this.lastSaveStatus.set('บันทึกล้มเหลว (ตรวจสอบขนาดไฟล์หรือการเชื่อมต่อ)');
+        throw err;
       })
     );
   }
@@ -428,15 +436,10 @@ export class PortfolioService {
         this.lastSaveStatus.set('ซิงก์เข้า TiDB Cloud สำเร็จ 100%');
         this.lastSavedAt.set(new Date().toLocaleTimeString('th-TH'));
       }),
-      catchError(() => {
-        const enriched = this.enrichWork(work);
-        const idx = this.fallbackWorks.findIndex(w => w.id === id);
-        if (idx !== -1) this.fallbackWorks[idx] = { ...enriched };
-        this.setCache('kruaon_tidb_works', this.fallbackWorks);
+      catchError((err) => {
         this.isSaving.set(false);
-        this.lastSaveStatus.set('บันทึกใน Local Cache เรียบร้อย');
-        this.lastSavedAt.set(new Date().toLocaleTimeString('th-TH'));
-        return of(enriched);
+        this.lastSaveStatus.set('บันทึกล้มเหลว (ตรวจสอบขนาดไฟล์หรือการเชื่อมต่อ)');
+        throw err;
       })
     );
   }

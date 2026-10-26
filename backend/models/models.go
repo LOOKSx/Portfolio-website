@@ -57,6 +57,7 @@ type Work struct {
 	FileName      string    `gorm:"size:255" json:"fileName"`
 	FileSize      string    `gorm:"size:64" json:"fileSize"`
 	FileType      string    `gorm:"size:64" json:"fileType"`
+	FileData      string    `gorm:"type:longtext" json:"fileData"`
 	Tags          string    `gorm:"size:255" json:"tags"` // comma-separated tags
 	CreatedAt     time.Time `json:"createdAt"`
 	UpdatedAt     time.Time `json:"updatedAt"`

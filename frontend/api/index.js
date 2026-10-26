@@ -232,6 +232,7 @@ function mapWorkRow(row) {
     fileName: row.file_name || '',
     fileSize: row.file_size || '',
     fileType: row.file_type || '',
+    fileData: row.file_data || '',
     tags: row.tags || '',
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -465,8 +466,8 @@ router.post('/works', async (req, res) => {
     const galleryImages = typeof body.galleryImages === 'string' ? body.galleryImages : JSON.stringify(body.galleryImages || body.galleryList || []);
 
     const insertSql = `
-      INSERT INTO works (id, course_id, title, category, category_label, date, student_name, image, gallery_images, description, link, download_text, file_name, file_size, file_type, tags, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(3), NOW(3))
+      INSERT INTO works (id, course_id, title, category, category_label, date, student_name, image, gallery_images, description, link, download_text, file_name, file_size, file_type, file_data, tags, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(3), NOW(3))
     `;
     await pool.query(insertSql, [
       id,
@@ -484,6 +485,7 @@ router.post('/works', async (req, res) => {
       body.fileName || '',
       body.fileSize || '',
       body.fileType || '',
+      body.fileData || body.file_data || '',
       body.tags || ''
     ]);
 
@@ -517,6 +519,7 @@ router.put('/works/:id', async (req, res) => {
         file_name = ?,
         file_size = ?,
         file_type = ?,
+        file_data = ?,
         tags = ?,
         updated_at = NOW(3)
       WHERE id = ?
@@ -537,6 +540,7 @@ router.put('/works/:id', async (req, res) => {
       body.fileName || '',
       body.fileSize || '',
       body.fileType || '',
+      body.fileData || body.file_data || '',
       body.tags || '',
       id
     ]);

@@ -391,9 +391,13 @@
                       <span>🎨</span> Canva
                     </span>
                   }
-                  @if (w.fileName || (w.link && w.link !== '#' && !isCanvaLink(w.link))) {
+                  @if (w.fileData || (w.fileName && w.fileName.length > 0)) {
                     <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-semibold border border-emerald-500/25 flex items-center gap-1">
                       <span>📎</span> {{ w.fileName || 'มีไฟล์แนบ' }}
+                    </span>
+                  } @else if (w.link && w.link !== '#' && !isCanvaLink(w.link) && !w.link.startsWith('data:')) {
+                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-400 font-semibold border border-blue-500/25 flex items-center gap-1">
+                      <span>🔗</span> ลิงก์ภายนอก
                     </span>
                   }
                   @for (t of w.tagsList; track t) {
@@ -729,97 +733,93 @@
           </div>
         }
 
-        <!-- Link / Attached File Download (Clean card, never print raw Base64 string) -->
-        <div class="p-4 rounded-2xl bg-custom-subtle/60 border border-custom">
-          <p class="text-[11px] font-bold text-custom-muted uppercase tracking-widest mb-3">📎 ไฟล์แนบและลิงก์ผลงาน</p>
-          @if (selectedWorkForDetail.link && selectedWorkForDetail.link !== '#') {
-            @if (selectedWorkForDetail.link.startsWith('data:') || selectedWorkForDetail.fileName) {
-              <!-- Attached File Display (Clean Card, No Long URL) -->
-              <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-custom-surface border border-emerald-500/30 shadow-sm">
-                <div class="flex items-center gap-3 min-w-0">
-                  <div class="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl flex-shrink-0">
-                    @if (selectedWorkForDetail.fileName?.endsWith('.pdf') || selectedWorkForDetail.link.startsWith('data:application/pdf')) {
-                      📄
-                    } @else if (selectedWorkForDetail.fileName?.endsWith('.apk')) {
-                      📱
-                    } @else if (selectedWorkForDetail.fileName?.endsWith('.zip') || selectedWorkForDetail.fileName?.endsWith('.rar')) {
-                      📦
-                    } @else {
-                      💾
+        <!-- Link & Attached File Download Section (Supports BOTH File and External/Canva Link simultaneously) -->
+        <div class="p-4 rounded-2xl bg-custom-subtle/60 border border-custom space-y-3">
+          <p class="text-[11px] font-bold text-custom-muted uppercase tracking-widest">📎 ไฟล์แนบและลิงก์ผลงาน</p>
+          
+          <!-- 1. Attached File Card (If uploaded) -->
+          @if (selectedWorkForDetail.fileData || selectedWorkForDetail.fileName || (selectedWorkForDetail.link && selectedWorkForDetail.link.startsWith('data:'))) {
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-custom-surface border border-emerald-500/30 shadow-sm">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl flex-shrink-0 border border-emerald-500/20">
+                  📄
+                </div>
+                <div class="min-w-0">
+                  <p class="text-sm font-bold text-custom-main truncate max-w-sm">
+                    {{ selectedWorkForDetail.fileName || 'เอกสารโครงงาน / ไฟล์แนบ' }}
+                  </p>
+                  <p class="text-xs text-custom-muted">
+                    ขนาด: <span class="font-num font-semibold text-emerald-600 dark:text-emerald-400">{{ selectedWorkForDetail.fileSize || 'พร้อมดาวน์โหลด' }}</span>
+                    @if (selectedWorkForDetail.fileType) {
+                      • ชนิด: <span class="font-mono uppercase">{{ selectedWorkForDetail.fileType }}</span>
                     }
-                  </div>
-                  <div class="min-w-0">
-                    <p class="text-sm font-bold text-custom-main truncate" [title]="selectedWorkForDetail.fileName || 'เอกสารโครงงาน'">
-                      {{ selectedWorkForDetail.fileName || 'ไฟล์เอกสารประกอบผลงาน' }}
-                    </p>
-                    <p class="text-xs text-custom-muted">
-                      @if (selectedWorkForDetail.fileSize) {
-                        ขนาดไฟล์: <span class="font-num font-semibold text-emerald-600 dark:text-emerald-400">{{ selectedWorkForDetail.fileSize }}</span> • 
-                      }
-                      พร้อมดาวน์โหลด
-                    </p>
-                  </div>
+                  </p>
                 </div>
-                <a [href]="selectedWorkForDetail.link" 
-                   [download]="selectedWorkForDetail.fileName || 'document.pdf'"
-                   target="_blank"
-                   class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md flex-shrink-0 transition-all">
-                  <span>📥</span> {{ selectedWorkForDetail.downloadText || 'ดาวน์โหลดไฟล์แนบ' }}
-                </a>
               </div>
-            } @else if (isCanvaLink(selectedWorkForDetail.link)) {
-              <!-- Canva Link Display Card -->
-              <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-custom-surface border border-purple-500/30 shadow-sm">
-                <div class="flex items-center gap-3 min-w-0">
-                  <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-500/20 via-purple-500/20 to-pink-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center text-xl flex-shrink-0 border border-purple-500/20">
-                    🎨
-                  </div>
-                  <div class="min-w-0">
-                    <p class="text-sm font-bold text-custom-main truncate max-w-sm">
-                      {{ selectedWorkForDetail.downloadText || 'สไลด์นำเสนอ Canva (Canva Presentation)' }}
-                    </p>
-                    <p class="text-xs text-custom-muted truncate max-w-xs font-mono">
-                      {{ selectedWorkForDetail.link }}
-                    </p>
-                  </div>
+              <button type="button" (click)="downloadWorkAttachment(selectedWorkForDetail, $event)"
+                      class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md flex-shrink-0 transition-all cursor-pointer">
+                <span>📥</span> ดาวน์โหลดไฟล์ ({{ selectedWorkForDetail.fileSize || 'Download' }})
+              </button>
+            </div>
+          }
+
+          <!-- 2. Canva Presentation Link Card (If Canva URL is present) -->
+          @if (selectedWorkForDetail.link && isCanvaLink(selectedWorkForDetail.link)) {
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-custom-surface border border-purple-500/30 shadow-sm">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-500/20 via-purple-500/20 to-pink-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center text-xl flex-shrink-0 border border-purple-500/20">
+                  🎨
                 </div>
-                <a [href]="selectedWorkForDetail.link" target="_blank"
-                   class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:opacity-90 text-white font-bold text-xs flex items-center gap-1.5 shadow-md flex-shrink-0 transition-all">
-                  <span>🎨</span> {{ selectedWorkForDetail.downloadText || 'เปิดดูบน Canva' }}
-                </a>
-              </div>
-            } @else {
-              <!-- External Web Link -->
-              <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-custom-surface border border-custom shadow-sm">
-                <div class="flex items-center gap-3 min-w-0">
-                  <div class="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xl flex-shrink-0">
-                    🌐
-                  </div>
-                  <div class="min-w-0">
-                    <p class="text-sm font-bold text-custom-main truncate max-w-sm">
-                      {{ selectedWorkForDetail.downloadText || 'เปิดดูผลงาน' }}
-                    </p>
-                    <p class="text-xs text-custom-muted truncate max-w-xs font-mono">
-                      {{ selectedWorkForDetail.link }}
-                    </p>
-                  </div>
+                <div class="min-w-0">
+                  <p class="text-sm font-bold text-custom-main truncate max-w-sm">
+                    สไลด์นำเสนอ Canva (Canva Presentation)
+                  </p>
+                  <p class="text-xs text-custom-muted truncate max-w-xs font-mono">
+                    {{ selectedWorkForDetail.link }}
+                  </p>
                 </div>
-                <a [href]="selectedWorkForDetail.link" target="_blank"
-                   class="px-5 py-2.5 rounded-xl bg-custom-accent hover:opacity-90 text-white font-bold text-xs flex items-center gap-1.5 shadow-md flex-shrink-0 transition-all">
-                  <span>🌐</span> {{ selectedWorkForDetail.downloadText || 'เปิดลิงก์' }}
-                </a>
               </div>
-            }
-          } @else {
+              <a [href]="selectedWorkForDetail.link" target="_blank"
+                 class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:opacity-90 text-white font-bold text-xs flex items-center gap-1.5 shadow-md flex-shrink-0 transition-all">
+                <span>🎨</span> เปิดดูบน Canva
+              </a>
+            </div>
+          }
+
+          <!-- 3. Other External Web Link (Google Drive, GitHub, YouTube, etc.) -->
+          @if (selectedWorkForDetail.link && selectedWorkForDetail.link !== '#' && !isCanvaLink(selectedWorkForDetail.link) && !selectedWorkForDetail.link.startsWith('data:')) {
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-custom-surface border border-custom shadow-sm">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-10 h-10 rounded-xl bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xl flex-shrink-0 border border-blue-500/20">
+                  🌐
+                </div>
+                <div class="min-w-0">
+                  <p class="text-sm font-bold text-custom-main truncate max-w-sm">
+                    {{ selectedWorkForDetail.downloadText || 'ลิงก์ผลงานภายนอก' }}
+                  </p>
+                  <p class="text-xs text-custom-muted truncate max-w-xs font-mono">
+                    {{ selectedWorkForDetail.link }}
+                  </p>
+                </div>
+              </div>
+              <a [href]="selectedWorkForDetail.link" target="_blank"
+                 class="px-5 py-2.5 rounded-xl bg-custom-accent hover:opacity-90 text-white font-bold text-xs flex items-center gap-1.5 shadow-md flex-shrink-0 transition-all">
+                <span>↗</span> {{ selectedWorkForDetail.downloadText || 'เปิดดูผลงาน' }}
+              </a>
+            </div>
+          }
+
+          <!-- Empty fallback -->
+          @if (!selectedWorkForDetail.fileData && !selectedWorkForDetail.fileName && (!selectedWorkForDetail.link || selectedWorkForDetail.link === '#')) {
             <p class="text-sm text-custom-muted">ยังไม่มีไฟล์แนบหรือลิงก์ผลงาน
               @if (portfolio.isEditMode()) {
-                — กดแก้ไขเพื่อแนบไฟล์หรือใส่ลิงก์ Canva
+                — กดแก้ไขเพื่อแนบไฟล์และใส่ลิงก์ Canva
               }
             </p>
           }
         </div>
 
-        <!-- Action Buttons -->
+                <!-- Action Buttons -->
         <div class="pt-2 border-t border-custom flex items-center justify-between gap-3 flex-wrap">
           <div>
             @if (portfolio.isEditMode()) {
@@ -1048,42 +1048,32 @@
             }
           </div>
 
-          <!-- Or External Link / Canva URL Input -->
-          <div class="pt-2 border-t border-custom/60 space-y-2">
-            @if (!workForm.link || !workForm.link.startsWith('data:')) {
-              <div>
-                <div class="flex items-center justify-between mb-1">
-                  <label class="block text-[11px] font-medium text-custom-muted">
-                    🌐 ลิงก์ผลงานภายนอก (Canva, Google Drive, GitHub, YouTube ฯลฯ)
-                  </label>
-                  <button type="button" (click)="setQuickCanvaLink()" 
-                          class="px-2.5 py-1 rounded-lg bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20 border border-purple-500/40 text-purple-700 dark:text-purple-300 font-bold text-[11px] flex items-center gap-1 hover:border-purple-500 transition-all shadow-sm">
-                    <span>🎨</span> + วางลิงก์ Canva
-                  </button>
-                </div>
-                <input type="text" [(ngModel)]="workForm.link" (ngModelChange)="onWorkLinkChange()" 
-                       placeholder="https://www.canva.com/design/... หรือลิงก์อื่น ๆ" 
-                       class="w-full px-3 py-2 rounded-xl bg-custom-surface border border-custom text-custom-main text-xs font-mono focus:border-purple-500 outline-none">
-                
-                @if (isCanvaLink(workForm.link)) {
-                  <div class="mt-2 p-2.5 rounded-xl bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 border border-purple-500/30 text-xs flex items-center justify-between animate-fadeIn">
-                    <span class="text-purple-700 dark:text-purple-300 font-semibold flex items-center gap-1.5">
-                      <span>🎨</span> ตรวจพบลิงก์ Canva (จะแสดงสไลด์แบบ Interactive ให้เปิดดูในหน้าเว็บได้ทันที)
-                    </span>
-                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-600 dark:text-purple-300 font-bold font-mono">Canva Embed Ready</span>
-                  </div>
-                }
-              </div>
-            } @else {
-              <div class="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs flex items-center justify-between">
-                <span class="text-emerald-700 dark:text-emerald-300 font-medium truncate">
-                  📎 ใช้ไฟล์แนบจากเครื่อง: <strong class="font-bold">{{ workForm.fileName }}</strong>
-                </span>
-                <button type="button" (click)="removeWorkFile()" class="text-xs text-red-500 hover:underline font-semibold ml-2 flex-shrink-0">
-                  เปลี่ยนเป็นใส่ลิงก์แทน
+          <!-- External Link / Canva URL Input (ALWAYS AVAILABLE - สามารถใส่ได้ทั้งไฟล์และลิงก์พร้อมกัน) -->
+          <div class="pt-3 border-t border-custom/60 space-y-2">
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="block text-[11px] font-medium text-custom-muted">
+                  🌐 ลิงก์ผลงานภายนอก (Canva, Google Drive, GitHub, YouTube ฯลฯ) <span class="text-custom-muted/70 font-normal">— ใส่พร้อมไฟล์แนบได้</span>
+                </label>
+                <button type="button" (click)="setQuickCanvaLink()" 
+                        class="px-2.5 py-1 rounded-lg bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20 border border-purple-500/40 text-purple-700 dark:text-purple-300 font-bold text-[11px] flex items-center gap-1 hover:border-purple-500 transition-all shadow-sm">
+                  <span>🎨</span> + วางลิงก์ Canva
                 </button>
               </div>
-            }
+              <input type="text" [(ngModel)]="workForm.link" (ngModelChange)="onWorkLinkChange()" 
+                     placeholder="https://www.canva.com/design/... หรือลิงก์อื่น ๆ" 
+                     class="w-full px-3 py-2 rounded-xl bg-custom-surface border border-custom text-custom-main text-xs font-mono focus:border-purple-500 outline-none">
+              
+              @if (isCanvaLink(workForm.link)) {
+                <div class="mt-2 p-2.5 rounded-xl bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 border border-purple-500/30 text-xs flex items-center justify-between animate-fadeIn">
+                  <span class="text-purple-700 dark:text-purple-300 font-semibold flex items-center gap-1.5">
+                    <span>🎨</span> ตรวจพบลิงก์ Canva (จะแสดงสไลด์แบบ Interactive ให้เปิดดูในหน้าเว็บได้ทันที)
+                  </span>
+                  <span class="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-600 dark:text-purple-300 font-bold font-mono">Canva Embed Ready</span>
+                </div>
+              }
+            </div>
+
             <div>
               <label class="block text-[11px] font-medium text-custom-muted mb-1">
                 🏷️ ข้อความที่จะแสดงบนปุ่มเปิดดูผลงาน / ดาวน์โหลด

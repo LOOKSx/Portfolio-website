@@ -66,6 +66,7 @@ export interface Work {
   fileName?: string;
   fileSize?: string;
   fileType?: string;
+  fileData?: string;
   tags: string;
   tagsList?: string[];
   createdAt?: string;

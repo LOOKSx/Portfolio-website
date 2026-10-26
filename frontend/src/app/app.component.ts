@@ -362,11 +362,12 @@ export class AppComponent implements OnInit {
       date: 'ภาคเรียนที่ 1 ปีการศึกษา 2567',
       image: '',
       description: '',
-      link: '#',
+      link: '',
       downloadText: 'ดูรายละเอียด',
       fileName: '',
       fileSize: '',
       fileType: '',
+      fileData: '',
       tags: '31901-2009, ปวส.2, สทส2'
     };
     this.workGalleryImages = [];
@@ -376,6 +377,13 @@ export class AppComponent implements OnInit {
 
   openEditWorkModal(work: Work): void {
     this.workForm = { ...work };
+    // Backward compatibility: if older work stored file data URL in link, migrate to fileData
+    if (this.workForm.link && this.workForm.link.startsWith('data:')) {
+      if (!this.workForm.fileData) {
+        this.workForm.fileData = this.workForm.link;
+      }
+      this.workForm.link = '';
+    }
     this.workGalleryImages = work.galleryList ? [...work.galleryList] : [];
     this.newInsideImageUrl = '';
     this.showWorkModal = true;
@@ -403,26 +411,22 @@ export class AppComponent implements OnInit {
     if (input.files && input.files.length > 0) {
       const files = Array.from(input.files);
       let count = 0;
+      this.showToastNotification(`⏳ กำลังประมวลผลรูปภาพข้างใน ${files.length} รูป...`);
       files.forEach(file => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const res = e.target?.result as string;
-          if (res) {
-            this.workGalleryImages.push(res);
-            count++;
-            if (count === files.length) {
-              this.showToastNotification(`เพิ่มภาพข้างในเรียบร้อย ${count} รูป`);
-            }
+        this.compressImage(file, 1280, 1280, 0.82).then((res) => {
+          this.workGalleryImages.push(res);
+          count++;
+          if (count === files.length) {
+            this.showToastNotification(`✅ เพิ่มภาพข้างในเรียบร้อย ${count} รูป`);
           }
-        };
-        reader.readAsDataURL(file);
+        });
       });
       input.value = '';
     }
   }
 
   saveWork(): void {
-    if (!this.workForm.title) {
+    if (!this.workForm.title || !this.workForm.title.trim()) {
       alert('กรุณากรอกชื่อผลงาน');
       return;
     }
@@ -441,7 +445,7 @@ export class AppComponent implements OnInit {
     this.workForm.galleryList = [...this.workGalleryImages];
 
     this.isSavingWork = true;
-    this.showToastNotification('☁️ กำลังส่งข้อมูลผลงานและรูปภาพเข้า TiDB Cloud Serverless...');
+    this.showToastNotification('☁️ กำลังส่งข้อมูลผลงานและไฟล์เข้า TiDB Cloud Serverless...');
 
     if (this.workForm.id) {
       this.portfolio.updateWork(this.workForm.id, this.workForm as Work).subscribe({
@@ -452,8 +456,11 @@ export class AppComponent implements OnInit {
           this.showToastNotification(`✅ [ยืนยัน 100%] บันทึกผลงาน "${updated.title}" เข้า TiDB Cloud สำเร็จ! (${new Date().toLocaleTimeString('th-TH')} น.)`);
           this.closeWorkModal();
         },
-        error: () => {
+        error: (err) => {
           this.isSavingWork = false;
+          console.error('Save work error:', err);
+          const msg = err?.error?.error || err?.message || 'ข้อมูลอาจมีขนาดใหญ่เกินไป';
+          alert(`❌ เกิดข้อผิดพลาดในการบันทึกผลงาน: ${msg}\n\nหากไฟล์แนบมีขนาดใหญ่ แนะนำให้ใช้ลิงก์ Google Drive หรือ OneDrive แทนครับ`);
           this.showToastNotification('❌ เกิดข้อผิดพลาดในการบันทึกผลงาน');
         }
       });
@@ -461,21 +468,22 @@ export class AppComponent implements OnInit {
       const newWork: Work = {
         id: 'work-' + Date.now(),
         courseId: this.workForm.courseId || this.courses[0]?.id || 'course-31901-2009',
-        title: this.workForm.title || '',
+        title: this.workForm.title.trim(),
         category: this.workForm.category || 'student',
         categoryLabel: this.workForm.categoryLabel || 'ผลงานนักเรียน',
-        date: this.workForm.date || '',
-        studentName: this.workForm.studentName || '',
+        date: this.workForm.date || 'ภาคเรียนที่ 1 ปีการศึกษา 2567',
+        studentName: this.workForm.studentName || 'นาย พุศิพงศ์ ราชรักษ์ ปวส.2 สทส2 เลขที่ 12 กลุ่ม 1',
         image: this.workForm.image || '',
         galleryImages: JSON.stringify(this.workGalleryImages),
         galleryList: [...this.workGalleryImages],
         description: this.workForm.description || '',
-        link: this.workForm.link || '#',
-        downloadText: this.workForm.downloadText || 'ดูรายละเอียด',
+        link: this.workForm.link || '',
+        downloadText: this.workForm.downloadText || (this.isCanvaLink(this.workForm.link) ? '🎨 เปิดดูสไลด์ / ผลงานบน Canva' : (this.workForm.fileName ? `ดาวน์โหลด ${this.workForm.fileName}` : 'ดูรายละเอียด')),
         fileName: this.workForm.fileName || '',
         fileSize: this.workForm.fileSize || '',
         fileType: this.workForm.fileType || '',
-        tags: this.workForm.tags || ''
+        fileData: this.workForm.fileData || '',
+        tags: this.workForm.tags || '31901-2009, ปวส.2, สทส2'
       };
 
       this.portfolio.createWork(newWork).subscribe({
@@ -486,8 +494,11 @@ export class AppComponent implements OnInit {
           this.showToastNotification(`✅ [ยืนยัน 100%] เพิ่มผลงานใหม่เข้า TiDB Cloud สำเร็จ! (${new Date().toLocaleTimeString('th-TH')} น.)`);
           this.closeWorkModal();
         },
-        error: () => {
+        error: (err) => {
           this.isSavingWork = false;
+          console.error('Create work error:', err);
+          const msg = err?.error?.error || err?.message || 'ข้อมูลอาจมีขนาดใหญ่เกินไป';
+          alert(`❌ เกิดข้อผิดพลาดในการเพิ่มผลงาน: ${msg}\n\nหากไฟล์แนบมีขนาดใหญ่ แนะนำให้ใช้ลิงก์ Google Drive หรือ OneDrive แทนครับ`);
           this.showToastNotification('❌ เกิดข้อผิดพลาดในการเพิ่มผลงาน');
         }
       });
@@ -771,24 +782,70 @@ export class AppComponent implements OnInit {
     this.showDiagnosticModal = false;
   }
 
-  // File Upload Helper (Base64)
+  // Client-side Image Compression Helper (Prevents Vercel 4.5MB Payload limit error)
+  compressImage(file: File, maxWidth = 1280, maxHeight = 1280, quality = 0.82): Promise<string> {
+    return new Promise((resolve, reject) => {
+      if (file.type.includes('svg') || file.type.includes('gif') || file.size < 120 * 1024) {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target?.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+        return;
+      }
+
+      const img = new Image();
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = reject;
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+        if (width > maxWidth || height > maxHeight) {
+          if (width > height) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          } else {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(img.src);
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+        const mime = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+        const dataUrl = canvas.toDataURL(mime, quality);
+        resolve(dataUrl);
+      };
+      img.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // File Upload Helper with Automatic Compression
   handleImageUpload(event: Event, targetField: 'work' | 'teacher'): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files[0]) {
       const file = input.files[0];
       const sizeKb = (file.size / 1024).toFixed(1);
-      this.showToastNotification(`⏳ กำลังอ่านและประมวลผลไฟล์รูปภาพ (${sizeKb} KB)...`);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
+      this.showToastNotification(`⏳ กำลังประมวลผลและปรับขนาดรูปภาพ (${sizeKb} KB)...`);
+      this.compressImage(file, 1280, 1280, 0.82).then((dataUrl) => {
         if (targetField === 'work') {
-          this.workForm.image = result;
+          this.workForm.image = dataUrl;
         } else if (targetField === 'teacher') {
-          this.teacherForm.avatar = result;
+          this.teacherForm.avatar = dataUrl;
         }
-        this.showToastNotification(`✅ อัปโหลดรูปภาพ (${sizeKb} KB) พร้อมบันทึกเข้า TiDB Cloud เรียบร้อยแล้ว`);
-      };
-      reader.readAsDataURL(file);
+        this.showToastNotification(`✅ ประมวลผลรูปภาพเรียบร้อย พร้อมบันทึกเข้า TiDB Cloud`);
+      }).catch(() => {
+        this.showToastNotification(`❌ ไม่สามารถประมวลผลรูปภาพได้`);
+      });
     }
   }
 
@@ -798,6 +855,14 @@ export class AppComponent implements OnInit {
     if (input.files && input.files[0]) {
       const file = input.files[0];
       const sizeBytes = file.size;
+
+      // Check file size: Vercel serverless request body has a 4.5 MB limit
+      if (sizeBytes > 3.5 * 1024 * 1024) {
+        alert(`ไฟล์ "${file.name}" มีขนาด ${(sizeBytes / (1024 * 1024)).toFixed(1)} MB ซึ่งเกินโควต้า 3.5 MB สำหรับการบันทึกลงฐานข้อมูลโดยตรง\n\n💡 คำแนะนำ: สำหรับไฟล์ขนาดใหญ่ แนะนำให้อัปโหลดขึ้น Google Drive หรือ OneDrive แล้วนำลิงก์มาวางในช่อง "ลิงก์ผลงานภายนอก" ด้านล่างได้ทันทีครับ`);
+        input.value = '';
+        return;
+      }
+
       let sizeStr = '';
       if (sizeBytes < 1024 * 1024) {
         sizeStr = `${(sizeBytes / 1024).toFixed(1)} KB`;
@@ -819,8 +884,9 @@ export class AppComponent implements OnInit {
       const reader = new FileReader();
       reader.onload = (e) => {
         const result = e.target?.result as string;
-        this.workForm.link = result;
-        this.showToastNotification(`✅ อัปโหลดไฟล์ "${file.name}" เรียบร้อยแล้ว (${sizeStr})`);
+        // Store into fileData (DO NOT overwrite workForm.link!)
+        this.workForm.fileData = result;
+        this.showToastNotification(`✅ แนบไฟล์ "${file.name}" เรียบร้อยแล้ว (${sizeStr})`);
       };
       reader.onerror = () => {
         this.showToastNotification(`❌ ไม่สามารถอ่านไฟล์ได้`);
@@ -833,9 +899,33 @@ export class AppComponent implements OnInit {
     this.workForm.fileName = '';
     this.workForm.fileSize = '';
     this.workForm.fileType = '';
-    this.workForm.link = '#';
-    this.workForm.downloadText = 'ดูรายละเอียด';
+    this.workForm.fileData = '';
+    if (this.workForm.downloadText && this.workForm.downloadText.includes('ดาวน์โหลด')) {
+      this.workForm.downloadText = this.isCanvaLink(this.workForm.link) ? '🎨 เปิดดูสไลด์ / ผลงานบน Canva' : 'ดูรายละเอียด';
+    }
     this.showToastNotification('นำไฟล์แนบออกแล้ว');
+  }
+
+  // Safe file downloader for works with attached files
+  downloadWorkAttachment(work?: Work | null, event?: Event): void {
+    if (event) event.stopPropagation();
+    if (!work) return;
+    const data = work.fileData || (work.link && work.link.startsWith('data:') ? work.link : null);
+    if (!data) {
+      if (work.link && work.link !== '#') {
+        window.open(work.link, '_blank');
+      } else {
+        this.showToastNotification('ไม่พบไฟล์แนบสำหรับดาวน์โหลด');
+      }
+      return;
+    }
+    const a = document.createElement('a');
+    a.href = data;
+    a.download = work.fileName || 'ผลงาน-พุศิพงศ์.pdf';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    this.showToastNotification(`📥 กำลังดาวน์โหลด "${work.fileName || 'ไฟล์ผลงาน'}"...`);
   }
 
   // --- Canva Embed & Integration Helpers ---
