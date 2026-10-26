@@ -8,12 +8,13 @@
     <a href="#" class="flex items-center space-x-3 group">
       <div class="relative w-11 h-11 rounded-2xl overflow-hidden border-2 border-custom-accent shadow-md flex-shrink-0 bg-stone-800 transition-transform duration-300 group-hover:scale-105">
         <img [src]="teacher?.avatar || '/pusiphong.jpg'" 
-             [alt]="teacher?.name" 
+             (error)="$any($event.target).src = '/pusiphong.jpg'"
+             [alt]="teacher?.name || 'นาย พุศิพงศ์ ราชรักษ์'" 
              class="w-full h-full object-cover object-top">
       </div>
       <div>
         <span class="font-heading font-bold text-lg sm:text-xl text-custom-main tracking-tight block leading-tight group-hover:text-custom-accent transition-colors">
-          พุศิพงศ์ ราชรักษ์
+          {{ teacher?.name || 'นาย พุศิพงศ์ ราชรักษ์' }}
         </span>
         <span class="text-xs text-custom-muted block">
           {{ teacher?.studentGroup || 'ปวส.2 สทส2' }} | อาจารย์ผู้สอน: {{ teacher?.instructor || 'ครูอ๋อน' }}
@@ -148,7 +149,8 @@
           <div class="relative group">
             <div class="w-48 h-48 sm:w-56 sm:h-56 rounded-3xl overflow-hidden p-1.5 bg-gradient-to-tr from-amber-700/30 to-amber-200/50 dark:from-amber-600/30 dark:to-stone-700/50 shadow-card relative">
               <img [src]="teacher?.avatar || '/pusiphong.jpg'" 
-                   [alt]="teacher?.name" 
+                   (error)="$any($event.target).src = '/pusiphong.jpg'"
+                   [alt]="teacher?.name || 'นาย พุศิพงศ์ ราชรักษ์'" 
                    class="w-full h-full object-cover object-top rounded-[22px] transition-transform duration-500 group-hover:scale-105">
               @if (portfolio.isEditMode()) {
                 <label class="absolute inset-0 bg-black/60 backdrop-blur-[2px] rounded-[22px] flex flex-col items-center justify-center text-white cursor-pointer opacity-90 sm:opacity-0 group-hover:opacity-100 transition-all z-10" title="คลิกเพื่อเปลี่ยนรูปโปรไฟล์ (บันทึกเข้า TiDB Cloud ทันที)">
