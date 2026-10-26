@@ -17,7 +17,7 @@
           {{ teacher?.name || 'นาย พุศิพงศ์ ราชรักษ์' }}
         </span>
         <span class="text-xs text-custom-muted block">
-          {{ teacher?.studentGroup || 'ปวส.2 สทส2' }} | อาจารย์ผู้สอน: {{ teacher?.instructor || 'ครูอ๋อน' }}
+          {{ teacher?.studentGroup || 'ปวส.2 สทส2' }} | {{ teacher?.instructorRole || 'อาจารย์ผู้สอน' }}: {{ teacher?.instructor || 'ครูอ๋อน' }}
         </span>
       </div>
     </a>
@@ -178,8 +178,13 @@
               นักศึกษาผู้จัดทำแฟ้มสะสมผลงาน (Student Portfolio)
             </span>
             <h1 class="text-2xl sm:text-3xl font-heading font-bold text-custom-main tracking-tight">
-              {{ teacher?.name }}
+              {{ teacher?.name || 'นาย พุศิพงศ์ ราชรักษ์' }}
             </h1>
+            @if (teacher?.fullName) {
+              <p class="text-xs sm:text-sm font-semibold text-custom-accent mt-0.5">
+                {{ teacher?.fullName }}
+              </p>
+            }
             <p class="text-sm font-medium text-custom-muted mt-1">
               {{ teacher?.position }}
             </p>
@@ -191,9 +196,9 @@
             </p>
             <!-- Instructor Tag -->
             <div class="mt-2 text-xs font-medium px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-900 dark:text-amber-200 inline-flex items-center gap-1.5">
-              <span>🎓</span> อาจารย์ผู้สอน / ที่ปรึกษา: <strong class="text-custom-accent">{{ teacher?.instructor || 'ครูอ๋อน (อาจารย์อ๋อน)' }}</strong>
+              <span>🎓</span> {{ teacher?.instructorRole || 'อาจารย์ผู้สอน / ที่ปรึกษา' }}: <strong class="text-custom-accent">{{ teacher?.instructor || 'ครูอ๋อน (อาจารย์อ๋อน)' }}</strong>
               @if (portfolio.isEditMode()) {
-                <button (click)="openEditTeacherModal()" class="ml-1 text-[11px] text-amber-500 hover:text-amber-600 font-bold" title="แก้ไขอาจารย์ผู้สอน / ที่ปรึกษา">✏️</button>
+                <button (click)="openEditTeacherModal()" class="ml-1 text-[11px] text-amber-500 hover:text-amber-600 font-bold" title="แก้ไขอาจารย์ผู้สอนและหัวข้อ">✏️</button>
               }
             </div>
           </div>
@@ -257,7 +262,7 @@
             คลังโครงงานและผลงานซอฟต์แวร์
           </h2>
           <p class="text-xs sm:text-sm text-custom-muted mt-1">
-            รวบรวมแอปพลิเคชันบนอุปกรณ์เคลื่อนที่ โครงงานซอฟต์แวร์ และใบงานปฏิบัติการ ในรายวิชา <strong>31901-2009 การพัฒนาซอฟต์แวร์สำหรับอุปกรณ์เคลื่อนที่</strong> โดย {{ teacher?.name || 'นาย พุศิพงศ์ ราชรักษ์' }} (อาจารย์ผู้สอน: {{ teacher?.instructor || 'ครูอ๋อน' }})
+            รวบรวมแอปพลิเคชันบนอุปกรณ์เคลื่อนที่ โครงงานซอฟต์แวร์ และใบงานปฏิบัติการ ในรายวิชา <strong>31901-2009 การพัฒนาซอฟต์แวร์สำหรับอุปกรณ์เคลื่อนที่</strong> โดย {{ teacher?.name || 'นาย พุศิพงศ์ ราชรักษ์' }} ({{ teacher?.instructorRole || 'อาจารย์ผู้สอน' }}: {{ teacher?.instructor || 'ครูอ๋อน' }})
           </p>
         </div>
 
@@ -466,7 +471,7 @@
 <footer class="border-t border-custom bg-custom-surface py-8 px-4 text-center text-xs text-custom-muted transition-colors">
   <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
     <div class="flex items-center space-x-2">
-      <span>© 2026 {{ teacher?.name || 'นาย พุศิพงศ์ ราชรักษ์' }} | แฟ้มสะสมผลงาน {{ teacher?.studentGroup || 'ปวส.2 สทส2' }} (อาจารย์ผู้สอน: {{ teacher?.instructor || 'ครูอ๋อน' }})</span>
+      <span>© 2026 {{ teacher?.name || 'นาย พุศิพงศ์ ราชรักษ์' }} | แฟ้มสะสมผลงาน {{ teacher?.studentGroup || 'ปวส.2 สทส2' }} ({{ teacher?.instructorRole || 'อาจารย์ผู้สอน' }}: {{ teacher?.instructor || 'ครูอ๋อน' }})</span>
     </div>
     <div class="text-[11px] text-custom-muted">
       Stack: Angular 19 (TypeScript, HTML, CSS) + Go (Golang) REST API + TiDB Distributed Database
@@ -947,14 +952,30 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="block font-medium text-custom-main mb-1">ระดับชั้น / กลุ่ม</label>
-            <input type="text" [(ngModel)]="teacherForm.position" placeholder="นักศึกษา ปวส.2 สทส2 เลขที่ 12 กลุ่ม 1" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main">
+        <div>
+          <label class="block font-medium text-custom-main mb-1">ระดับชั้น / กลุ่ม</label>
+          <input type="text" [(ngModel)]="teacherForm.position" placeholder="นักศึกษา ปวส.2 สทส2 เลขที่ 12 กลุ่ม 1" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main">
+        </div>
+
+        <!-- กล่องแก้ไขอาจารย์ผู้สอน / ที่ปรึกษา (ทั้งหัวข้อบทบาท และชื่ออาจารย์) -->
+        <div class="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-xs sm:text-sm text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
+              <span>🎓</span> แก้ไขข้อมูลอาจารย์ผู้สอน / ที่ปรึกษา (Instructor & Advisor)
+            </span>
+            <span class="text-[11px] text-custom-accent font-semibold">✨ ปรับแต่งหัวข้อและชื่อได้อิสระ</span>
           </div>
-          <div>
-            <label class="block font-medium text-custom-main mb-1">🎓 อาจารย์ผู้สอน / ที่ปรึกษา</label>
-            <input type="text" [(ngModel)]="teacherForm.instructor" placeholder="ครูอ๋อน (อาจารย์อ๋อน)" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main font-medium">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block font-medium text-custom-main mb-1 text-xs">หัวข้อบทบาท (Role Title)</label>
+              <input type="text" [(ngModel)]="teacherForm.instructorRole" placeholder="อาจารย์ผู้สอน / ที่ปรึกษา" class="w-full px-3 py-2 rounded-xl bg-custom-surface border border-custom text-custom-main font-medium text-xs sm:text-sm focus:border-custom-accent outline-none">
+              <p class="text-[10px] text-custom-muted mt-0.5">เช่น อาจารย์ผู้สอน / ที่ปรึกษา, ครูที่ปรึกษาโครงงาน</p>
+            </div>
+            <div>
+              <label class="block font-medium text-custom-main mb-1 text-xs">ชื่ออาจารย์ (Instructor Name)</label>
+              <input type="text" [(ngModel)]="teacherForm.instructor" placeholder="ครูอ๋อน (อาจารย์อ๋อน)" class="w-full px-3 py-2 rounded-xl bg-custom-surface border border-custom text-custom-main font-bold text-xs sm:text-sm focus:border-custom-accent outline-none">
+              <p class="text-[10px] text-custom-muted mt-0.5">เช่น ครูอ๋อน (อาจารย์อ๋อน)</p>
+            </div>
           </div>
         </div>
 
@@ -1053,18 +1074,25 @@
             }
           </div>
         </div>
-        <div class="pt-4 border-t border-custom flex justify-end space-x-2">
-          <button (click)="closeTeacherModal()" class="px-4 py-2.5 rounded-xl border border-custom text-custom-muted hover:bg-custom-subtle text-xs sm:text-sm">ยกเลิก</button>
-          <button (click)="saveTeacher()" 
-                  [disabled]="isSavingTeacher"
-                  class="px-5 py-2.5 rounded-xl bg-custom-accent text-white font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-2 shadow-md transition-all text-xs sm:text-sm">
-            @if (isSavingTeacher) {
-              <span class="inline-block animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
-              <span>กำลังบันทึกลง TiDB Cloud...</span>
-            } @else {
-              <span>💾 บันทึกข้อมูลประวัติ (ซิงก์ TiDB 100%)</span>
-            }
-          </button>
+        <!-- Sticky Modal Action Footer (ปุ่มบันทึกมองเห็นได้ตลอดเวลา ไม่ต้องเลื่อนหา) -->
+        <div class="sticky bottom-0 bg-custom-surface/95 backdrop-blur-md pt-3 pb-1 border-t border-custom flex flex-col sm:flex-row items-center justify-between gap-2 z-20 mt-4 shadow-xl -mx-6 sm:-mx-8 px-6 sm:px-8">
+          <div class="text-[11px] text-custom-muted flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>ซิงก์ตรง TiDB Cloud (บันทึกจริง 100%)</span>
+          </div>
+          <div class="flex items-center space-x-2 w-full sm:w-auto justify-end">
+            <button (click)="closeTeacherModal()" class="px-4 py-2.5 rounded-xl border border-custom text-custom-muted hover:bg-custom-subtle text-xs sm:text-sm font-medium">ยกเลิก</button>
+            <button (click)="saveTeacher()" 
+                    [disabled]="isSavingTeacher"
+                    class="px-6 py-2.5 rounded-xl bg-custom-accent text-white font-bold hover:opacity-90 disabled:opacity-50 flex items-center gap-2 shadow-lg transition-all text-xs sm:text-sm">
+              @if (isSavingTeacher) {
+                <span class="inline-block animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
+                <span>กำลังบันทึกลง TiDB Cloud...</span>
+              } @else {
+                <span>💾 บันทึกข้อมูลประวัติ (ซิงก์ TiDB 100%)</span>
+              }
+            </button>
+          </div>
         </div>
       </div>
     </div>

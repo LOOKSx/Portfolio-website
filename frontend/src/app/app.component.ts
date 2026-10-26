@@ -629,18 +629,21 @@ export class AppComponent implements OnInit {
   // --- Teacher / Student Profile CRUD ---
   openEditTeacherModal(): void {
     if (this.teacher) {
-      this.teacherForm = { ...this.teacher };
+      this.teacherForm = JSON.parse(JSON.stringify(this.teacher));
       // Default studentGroup if empty
       if (!this.teacherForm.studentGroup) {
         this.teacherForm.studentGroup = 'ปวส.2 สทส2 เลขที่ 12';
       }
-      // Default instructor if empty
+      // Default instructor & instructorRole if empty
+      if (!this.teacherForm.instructorRole) {
+        this.teacherForm.instructorRole = 'อาจารย์ผู้สอน / ที่ปรึกษา';
+      }
       if (!this.teacherForm.instructor || this.teacherForm.instructor === 'อาจารย์ผู้สอน: ') {
         this.teacherForm.instructor = 'ครูอ๋อน (อาจารย์อ๋อน)';
       }
       // Populate stats with real works count
-      if (this.teacher.stats && this.teacher.stats.length > 0) {
-        this.teacherForm.stats = this.teacher.stats.map(s => {
+      if (this.teacherForm.stats && this.teacherForm.stats.length > 0) {
+        this.teacherForm.stats = this.teacherForm.stats.map(s => {
           if (s.label && (s.label.includes('โครงงาน') || s.label.includes('ผลงาน'))) {
             return { ...s, value: this.works.length.toString() };
           }
@@ -648,15 +651,15 @@ export class AppComponent implements OnInit {
         });
       } else {
         this.teacherForm.stats = [
-          { label: 'ระดับชั้น/กลุ่ม', value: 'ปวส.2', unit: 'สทส2 เลขที่ 12' },
+          { label: 'ระดับชั้น/กลุ่ม', value: 'ปวส.2', unit: this.teacherForm.studentGroup || 'สทส2 เลขที่ 12' },
           { label: 'รหัสวิชาหลัก', value: '31901-2009', unit: 'โมบายแอป' },
           { label: 'โครงงานผลงาน', value: this.works.length.toString(), unit: 'ชิ้นงาน' },
           { label: 'อาจารย์ผู้สอน', value: 'ครูอ๋อน', unit: 'ที่ปรึกษา' }
         ];
       }
       // Populate text helpers
-      this.teacherAchievementsText = (this.teacher.academicAchievements || []).join('\n');
-      const edu = this.teacher.education || [];
+      this.teacherAchievementsText = (this.teacherForm.academicAchievements || []).join('\n');
+      const edu = this.teacherForm.education || [];
       this.teacherEdu1Degree = edu[0]?.degree || '';
       this.teacherEdu1Inst = edu[0]?.institution || '';
       this.teacherEdu1Year = edu[0]?.year || '';
@@ -708,12 +711,17 @@ export class AppComponent implements OnInit {
         });
       }
 
+      // Synchronize stringified JSON fields
+      this.teacherForm.statsJson = JSON.stringify(this.teacherForm.stats || []);
+      this.teacherForm.educationJson = JSON.stringify(this.teacherForm.education || []);
+      this.teacherForm.achievementsJson = JSON.stringify(this.teacherForm.academicAchievements || []);
+
       this.isSavingTeacher = true;
       this.showToastNotification('☁️ กำลังส่งข้อมูลประวัตินักศึกษาเข้า TiDB Cloud Serverless...');
 
       this.portfolio.updateTeacher(this.teacherForm as Teacher).subscribe({
         next: (updated) => {
-          this.teacher = updated;
+          this.teacher = { ...updated };
           this.updateWorksCountStat();
           this.isSavingTeacher = false;
           this.showToastNotification(`✅ [ยืนยัน 100%] บันทึกข้อมูลประวัตินักศึกษาเข้า TiDB Cloud สำเร็จ! (${new Date().toLocaleTimeString('th-TH')} น.)`);

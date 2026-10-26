@@ -11,6 +11,7 @@ type Teacher struct {
 	School             string    `gorm:"size:255" json:"school"`
 	Department         string    `gorm:"size:255" json:"department"`
 	Instructor         string    `gorm:"size:255" json:"instructor"`
+	InstructorRole     string    `gorm:"size:255" json:"instructorRole"`
 	StudentGroup       string    `gorm:"size:255" json:"studentGroup"`
 	Email              string    `gorm:"size:255" json:"email"`
 	Phone              string    `gorm:"size:64" json:"phone"`

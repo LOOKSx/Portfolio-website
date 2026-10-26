@@ -156,6 +156,12 @@ router.get('/diagnostic', async (req, res) => {
 // -------------------------------------------------------------
 function mapTeacherRow(row) {
   if (!row) return null;
+  let stats = [];
+  let education = [];
+  let academicAchievements = [];
+  try { if (row.stats_json && row.stats_json !== '[]') stats = JSON.parse(row.stats_json); } catch {}
+  try { if (row.education_json && row.education_json !== '[]') education = JSON.parse(row.education_json); } catch {}
+  try { if (row.achievements_json && row.achievements_json !== '[]') academicAchievements = JSON.parse(row.achievements_json); } catch {}
   return {
     id: row.id,
     name: row.name || '',
@@ -164,6 +170,7 @@ function mapTeacherRow(row) {
     school: row.school || '',
     department: row.department || '',
     instructor: row.instructor || '',
+    instructorRole: row.instructor_role || 'อาจารย์ผู้สอน / ที่ปรึกษา',
     studentGroup: row.student_group || '',
     email: row.email || '',
     phone: row.phone || '',
@@ -171,6 +178,9 @@ function mapTeacherRow(row) {
     avatar: row.avatar || '',
     bio: row.bio || '',
     teachingPhilosophy: row.teaching_philosophy || '',
+    stats: stats,
+    education: education,
+    academicAchievements: academicAchievements,
     statsJson: row.stats_json || '[]',
     educationJson: row.education_json || '[]',
     achievementsJson: row.achievements_json || '[]',
@@ -253,10 +263,27 @@ router.put('/teacher', async (req, res) => {
     }
     const teacherId = rows[0].id;
 
-    // Stringify json fields if provided as objects
-    const statsJson = typeof body.stats === 'object' ? JSON.stringify(body.stats) : (body.statsJson || '[]');
-    const educationJson = typeof body.education === 'object' ? JSON.stringify(body.education) : (body.educationJson || '[]');
-    const achievementsJson = typeof body.academicAchievements === 'object' ? JSON.stringify(body.academicAchievements) : (body.achievementsJson || '[]');
+    // Stringify json fields if provided as objects, or keep existing if empty
+    let statsJson = '[]';
+    if (Array.isArray(body.stats) && body.stats.length > 0) {
+      statsJson = JSON.stringify(body.stats);
+    } else if (body.statsJson && body.statsJson !== '[]') {
+      statsJson = body.statsJson;
+    }
+
+    let educationJson = '[]';
+    if (Array.isArray(body.education) && body.education.length > 0) {
+      educationJson = JSON.stringify(body.education);
+    } else if (body.educationJson && body.educationJson !== '[]') {
+      educationJson = body.educationJson;
+    }
+
+    let achievementsJson = '[]';
+    if (Array.isArray(body.academicAchievements) && body.academicAchievements.length > 0) {
+      achievementsJson = JSON.stringify(body.academicAchievements);
+    } else if (body.achievementsJson && body.achievementsJson !== '[]') {
+      achievementsJson = body.achievementsJson;
+    }
 
     const updateSql = `
       UPDATE teachers SET
@@ -266,6 +293,7 @@ router.put('/teacher', async (req, res) => {
         school = ?,
         department = ?,
         instructor = ?,
+        instructor_role = ?,
         student_group = ?,
         email = ?,
         phone = ?,
@@ -287,6 +315,7 @@ router.put('/teacher', async (req, res) => {
       body.school || '',
       body.department || '',
       body.instructor || '',
+      body.instructorRole || 'อาจารย์ผู้สอน / ที่ปรึกษา',
       body.studentGroup || '',
       body.email || '',
       body.phone || '',

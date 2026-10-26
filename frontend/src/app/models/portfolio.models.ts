@@ -24,6 +24,7 @@ export interface Teacher {
   bio: string;
   teachingPhilosophy: string;
   instructor?: string;
+  instructorRole?: string;
   studentGroup?: string;
   statsJson?: string;
   educationJson?: string;

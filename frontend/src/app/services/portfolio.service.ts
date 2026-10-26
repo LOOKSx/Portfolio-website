@@ -50,6 +50,7 @@ export class PortfolioService {
     school: 'วิทยาลัยอาชีวศึกษา / วิทยาลัยเทคนิค (สังกัด สอศ.)',
     department: 'สาขาเทคโนโลยีสารสนเทศ ประเภทวิชาอุตสาหกรรมดิจิทัลและสารสนเทศ',
     instructor: 'ครูอ๋อน (อาจารย์อ๋อน)',
+    instructorRole: 'อาจารย์ผู้สอน / ที่ปรึกษา',
     studentGroup: 'ปวส.2 สทส2 เลขที่ 12',
     email: 'pusiphong.it@example.ac.th',
     phone: '08x-xxx-xxxx',
@@ -221,6 +222,10 @@ export class PortfolioService {
 
   updateTeacher(teacher: Teacher): Observable<Teacher> {
     this.isSaving.set(true);
+    if (teacher.stats) teacher.statsJson = JSON.stringify(teacher.stats);
+    if (teacher.education) teacher.educationJson = JSON.stringify(teacher.education);
+    if (teacher.academicAchievements) teacher.achievementsJson = JSON.stringify(teacher.academicAchievements);
+
     this.setCache('kruaon_tidb_teacher', teacher);
     this.fallbackTeacher = { ...teacher };
 
@@ -228,6 +233,7 @@ export class PortfolioService {
       map(t => {
         const parsed = this.parseTeacherData(t);
         this.setCache('kruaon_tidb_teacher', parsed);
+        this.fallbackTeacher = { ...parsed };
         this.isSaving.set(false);
         this.lastSaveStatus.set('ซิงก์เข้า TiDB Cloud สำเร็จ 100%');
         this.lastSavedAt.set(new Date().toLocaleTimeString('th-TH'));
@@ -244,15 +250,16 @@ export class PortfolioService {
 
   private parseTeacherData(t: Teacher): Teacher {
     try {
-      if (t.statsJson) t.stats = JSON.parse(t.statsJson);
-      if (t.educationJson) t.education = JSON.parse(t.educationJson);
-      if (t.achievementsJson) t.academicAchievements = JSON.parse(t.achievementsJson);
+      if (t.statsJson && t.statsJson !== '[]') t.stats = JSON.parse(t.statsJson);
+      if (t.educationJson && t.educationJson !== '[]') t.education = JSON.parse(t.educationJson);
+      if (t.achievementsJson && t.achievementsJson !== '[]') t.academicAchievements = JSON.parse(t.achievementsJson);
     } catch (e) {
       // fallback
     }
-    if (!t.stats) t.stats = this.fallbackTeacher.stats;
-    if (!t.education) t.education = this.fallbackTeacher.education;
-    if (!t.academicAchievements) t.academicAchievements = this.fallbackTeacher.academicAchievements;
+    if (!t.stats || t.stats.length === 0) t.stats = this.fallbackTeacher.stats;
+    if (!t.education || t.education.length === 0) t.education = this.fallbackTeacher.education;
+    if (!t.academicAchievements || t.academicAchievements.length === 0) t.academicAchievements = this.fallbackTeacher.academicAchievements;
+    if (!t.instructorRole) t.instructorRole = this.fallbackTeacher.instructorRole || 'อาจารย์ผู้สอน / ที่ปรึกษา';
     return t;
   }
 
