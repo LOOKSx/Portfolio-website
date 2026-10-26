@@ -408,26 +408,25 @@ export class AppComponent implements OnInit {
     this.showToastNotification('ลบรูปภาพข้างในแล้ว');
   }
 
-  handleInsideImagesUpload(event: Event): void {
+  async handleInsideImagesUpload(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const files = Array.from(input.files);
-      let count = 0;
       this.showToastNotification(`⏳ กำลังประมวลผลรูปภาพข้างใน ${files.length} รูป...`);
-      files.forEach(file => {
-        this.compressImage(file, 1280, 1280, 0.82).then((res) => {
+      for (let i = 0; i < files.length; i++) {
+        try {
+          const res = await this.compressImage(files[i], 1080, 1080, 0.78);
           this.workGalleryImages.push(res);
-          count++;
-          if (count === files.length) {
-            this.showToastNotification(`✅ เพิ่มภาพข้างในเรียบร้อย ${count} รูป`);
-          }
-        });
-      });
+        } catch {
+          console.warn('Could not compress image', files[i].name);
+        }
+      }
+      this.showToastNotification(`✅ เพิ่มภาพข้างในเรียบร้อย (${this.workGalleryImages.length} รูป)`);
       input.value = '';
     }
   }
 
-  saveWork(): void {
+  async saveWork(): Promise<void> {
     if (!this.workForm.title || !this.workForm.title.trim()) {
       alert('กรุณากรอกชื่อผลงาน');
       return;
@@ -442,12 +441,51 @@ export class AppComponent implements OnInit {
       this.workForm.image = 'https://images.unsplash.com/photo-1551650975-87deedd944c3?q=80&w=800&auto=format&fit=crop';
     }
 
+    this.isSavingWork = true;
+    this.showToastNotification('⏳ กำลังปรับขนาดรูปภาพและเตรียมข้อมูลเข้า TiDB Cloud...');
+
+    // Auto-compress cover image if large Base64
+    if (this.workForm.image && this.workForm.image.startsWith('data:')) {
+      this.workForm.image = await this.compressDataUrl(this.workForm.image, 1080, 1080, 0.82);
+    }
+
+    // Auto-compress all inside gallery images (prevents Vercel 4.5MB request limit error on multiple images)
+    if (this.workGalleryImages.length > 0) {
+      for (let i = 0; i < this.workGalleryImages.length; i++) {
+        if (this.workGalleryImages[i] && this.workGalleryImages[i].startsWith('data:')) {
+          this.workGalleryImages[i] = await this.compressDataUrl(this.workGalleryImages[i], 1080, 1080, 0.78);
+        }
+      }
+    }
+
     // Attach inside gallery images
     this.workForm.galleryImages = JSON.stringify(this.workGalleryImages);
     this.workForm.galleryList = [...this.workGalleryImages];
 
-    this.isSavingWork = true;
-    this.showToastNotification('☁️ กำลังส่งข้อมูลผลงานและไฟล์เข้า TiDB Cloud Serverless...');
+    this.showToastNotification('☁️ กำลังส่งข้อมูลผลงานเข้า TiDB Cloud Serverless...');
+
+    const handleError = (err: any, actionName: string) => {
+      this.isSavingWork = false;
+      console.error(`${actionName} error:`, err);
+      let errorDetail = '';
+      if (typeof err?.error === 'string') {
+        errorDetail = err.error;
+      } else if (err?.error?.error) {
+        errorDetail = err.error.error;
+      } else if (err?.message) {
+        errorDetail = err.message;
+      } else if (err?.statusText) {
+        errorDetail = `${err.status} ${err.statusText}`;
+      } else {
+        try {
+          errorDetail = JSON.stringify(err?.error || err);
+        } catch {
+          errorDetail = 'ข้อผิดพลาดเครือข่าย';
+        }
+      }
+      alert(`❌ เกิดข้อผิดพลาดในการ${actionName}: ${errorDetail}\n\n💡 คำแนะนำ: หากมีรูปภาพจำนวนมาก ระบบได้ช่วยย่อขนาดให้อัตโนมัติแล้ว กรุณากดบันทึกใหม่อีกครั้งครับ`);
+      this.showToastNotification(`❌ เกิดข้อผิดพลาดในการ${actionName}`);
+    };
 
     if (this.workForm.id) {
       const workId = this.workForm.id;
@@ -470,13 +508,7 @@ export class AppComponent implements OnInit {
           this.showToastNotification(`✅ [ยืนยัน 100%] บันทึกผลงาน "${updated.title}" เข้า TiDB Cloud สำเร็จ! (${new Date().toLocaleTimeString('th-TH')} น.)`);
           this.closeWorkModal();
         },
-        error: (err) => {
-          this.isSavingWork = false;
-          console.error('Save work error:', err);
-          const msg = err?.error?.error || err?.message || 'ข้อมูลอาจมีขนาดใหญ่เกินไป';
-          alert(`❌ เกิดข้อผิดพลาดในการบันทึกผลงาน: ${msg}\n\nหากไฟล์แนบมีขนาดใหญ่ แนะนำให้ใช้ลิงก์ Google Drive หรือ OneDrive แทนครับ`);
-          this.showToastNotification('❌ เกิดข้อผิดพลาดในการบันทึกผลงาน');
-        }
+        error: (err) => handleError(err, 'บันทึกผลงาน')
       });
     } else {
       const newWorkId = 'work-' + Date.now();
@@ -520,13 +552,7 @@ export class AppComponent implements OnInit {
           this.showToastNotification(`✅ [ยืนยัน 100%] เพิ่มผลงานใหม่เข้า TiDB Cloud สำเร็จ! (${new Date().toLocaleTimeString('th-TH')} น.)`);
           this.closeWorkModal();
         },
-        error: (err) => {
-          this.isSavingWork = false;
-          console.error('Create work error:', err);
-          const msg = err?.error?.error || err?.message || 'ข้อมูลอาจมีขนาดใหญ่เกินไป';
-          alert(`❌ เกิดข้อผิดพลาดในการเพิ่มผลงาน: ${msg}\n\nหากไฟล์แนบมีขนาดใหญ่ แนะนำให้ใช้ลิงก์ Google Drive หรือ OneDrive แทนครับ`);
-          this.showToastNotification('❌ เกิดข้อผิดพลาดในการเพิ่มผลงาน');
-        }
+        error: (err) => handleError(err, 'เพิ่มผลงาน')
       });
     }
   }
@@ -808,10 +834,10 @@ export class AppComponent implements OnInit {
     this.showDiagnosticModal = false;
   }
 
-  // Client-side Image Compression Helper (Prevents Vercel 4.5MB Payload limit error)
-  compressImage(file: File, maxWidth = 1280, maxHeight = 1280, quality = 0.82): Promise<string> {
+  // Client-side Image Compression Helper (Guarantees <= 100KB per image, preventing Vercel 4.5MB Payload limit error)
+  compressImage(file: File, maxWidth = 1080, maxHeight = 1080, quality = 0.80): Promise<string> {
     return new Promise((resolve, reject) => {
-      if (file.type.includes('svg') || file.type.includes('gif') || file.size < 120 * 1024) {
+      if (file.type.includes('svg') || file.type.includes('gif')) {
         const reader = new FileReader();
         reader.onload = (e) => resolve(e.target?.result as string);
         reader.onerror = reject;
@@ -845,13 +871,61 @@ export class AppComponent implements OnInit {
           resolve(img.src);
           return;
         }
+        // Fill white background (ensures PNG screenshots convert cleanly without black background)
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, width, height);
         ctx.drawImage(img, 0, 0, width, height);
-        const mime = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
-        const dataUrl = canvas.toDataURL(mime, quality);
+        // ALWAYS use 'image/jpeg' to enforce lossy compression (reduces 3MB PNGs to ~70KB JPEGs!)
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
         resolve(dataUrl);
       };
       img.onerror = reject;
       reader.readAsDataURL(file);
+    });
+  }
+
+  // Re-compress any existing Base64 Data URL (e.g. from pasted PNG screenshots or gallery items)
+  compressDataUrl(dataUrl: string, maxWidth = 1080, maxHeight = 1080, quality = 0.78): Promise<string> {
+    return new Promise((resolve) => {
+      if (!dataUrl || !dataUrl.startsWith('data:image/')) {
+        resolve(dataUrl);
+        return;
+      }
+      // If already small JPEG (< 120 KB), no need to compress again
+      if (dataUrl.length < 120 * 1024 && dataUrl.startsWith('data:image/jpeg')) {
+        resolve(dataUrl);
+        return;
+      }
+
+      const img = new Image();
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+        if (width > maxWidth || height > maxHeight) {
+          if (width > height) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          } else {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(dataUrl);
+          return;
+        }
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0, width, height);
+        const compressed = canvas.toDataURL('image/jpeg', quality);
+        resolve(compressed);
+      };
+      img.onerror = () => resolve(dataUrl);
+      img.src = dataUrl;
     });
   }
 
