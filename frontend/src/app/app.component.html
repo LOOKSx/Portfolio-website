@@ -385,7 +385,12 @@
                   </button>
                 </div>
 
-                <div class="flex flex-wrap gap-1">
+                <div class="flex flex-wrap items-center gap-1">
+                  @if (w.fileName || (w.link && w.link !== '#')) {
+                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-semibold border border-emerald-500/25 flex items-center gap-1">
+                      <span>📎</span> {{ w.fileName || 'มีไฟล์แนบ' }}
+                    </span>
+                  }
                   @for (t of w.tagsList; track t) {
                     <span class="text-[10px] px-2 py-0.5 rounded-full bg-custom-subtle text-custom-muted">#{{ t }}</span>
                   }
@@ -886,6 +891,75 @@
           }
         </div>
 
+        <!-- Section 3: อัปโหลดไฟล์แนบประกอบผลงาน (File Upload & Link) -->
+        <div class="p-3.5 rounded-2xl bg-custom-subtle/60 border border-custom space-y-3">
+          <div class="flex items-center justify-between">
+            <label class="block font-semibold text-custom-main text-xs sm:text-sm flex items-center gap-1.5">
+              <span>📎</span> อัปโหลดไฟล์แนบประกอบผลงาน (Attached File & Document)
+            </label>
+            <span class="text-[11px] text-custom-accent font-semibold">✨ รองรับ PDF, Word, PPT, ZIP, APK ฯลฯ</span>
+          </div>
+          <p class="text-[11px] text-custom-muted">คุณสามารถอัปโหลดไฟล์จริงจากเครื่องคอมพิวเตอร์ของคุณ หรือใส่ลิงก์ผลงานภายนอก (Google Drive, GitHub, YouTube) ได้</p>
+
+          <!-- File Upload Box -->
+          <div class="space-y-2">
+            @if (workForm.fileName) {
+              <!-- Uploaded File Badge -->
+              <div class="p-3 rounded-xl bg-custom-surface border border-emerald-500/40 flex items-center justify-between gap-3 shadow-sm">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <div class="w-9 h-9 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-base flex-shrink-0">
+                    📄
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-xs font-bold text-custom-main truncate" [title]="workForm.fileName">
+                      {{ workForm.fileName }}
+                    </p>
+                    <p class="text-[10px] text-custom-muted">
+                      ขนาดไฟล์: <span class="font-num font-semibold text-emerald-600 dark:text-emerald-400">{{ workForm.fileSize }}</span> 
+                      • แนบไฟล์เข้าผลงานแล้ว
+                    </p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-1.5 flex-shrink-0">
+                  <label class="px-2.5 py-1.5 rounded-lg bg-custom-subtle border border-custom hover:border-custom-accent text-custom-main text-xs cursor-pointer flex items-center gap-1" title="เปลี่ยนไฟล์ใหม่">
+                    <span>🔄</span> เปลี่ยนไฟล์
+                    <input type="file" class="hidden" (change)="handleWorkFileUpload($event)">
+                  </label>
+                  <button type="button" (click)="removeWorkFile()" class="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 text-xs font-bold" title="ลบไฟล์นี้">
+                    ✕
+                  </button>
+                </div>
+              </div>
+            } @else {
+              <!-- Click to Upload -->
+              <label class="p-3.5 rounded-xl border-2 border-dashed border-custom hover:border-custom-accent bg-custom-surface flex items-center justify-center gap-3 cursor-pointer transition-all group">
+                <span class="text-2xl group-hover:scale-110 transition-transform">📁</span>
+                <div class="text-left">
+                  <span class="block text-xs font-bold text-custom-main group-hover:text-custom-accent">คลิกเพื่ออัปโหลดไฟล์จากเครื่อง</span>
+                  <span class="block text-[10px] text-custom-muted">รองรับไฟล์เอกสาร PDF, Word, PowerPoint, ZIP, APK, โค้ดโครงงาน ฯลฯ</span>
+                </div>
+                <input type="file" class="hidden" (change)="handleWorkFileUpload($event)">
+              </label>
+            }
+          </div>
+
+          <!-- Or External Link URL Input -->
+          <div class="pt-2 border-t border-custom/60 space-y-2">
+            <div>
+              <label class="block text-[11px] font-medium text-custom-muted mb-1">
+                🌐 หรือใส่ลิงก์ผลงานภายนอก (URL หรือ ลิงก์ดาวน์โหลด)
+              </label>
+              <input type="text" [(ngModel)]="workForm.link" placeholder="https://... หรืออัปโหลดไฟล์ด้านบน" class="w-full px-3 py-2 rounded-xl bg-custom-surface border border-custom text-custom-main text-xs font-mono">
+            </div>
+            <div>
+              <label class="block text-[11px] font-medium text-custom-muted mb-1">
+                🏷️ ข้อความที่จะแสดงบนปุ่มดาวน์โหลด / เปิดดูผลงาน
+              </label>
+              <input type="text" [(ngModel)]="workForm.downloadText" placeholder="เช่น ดาวน์โหลดเอกสารโครงงาน (PDF), ดูซอร์สโค้ดบน GitHub" class="w-full px-3 py-2 rounded-xl bg-custom-surface border border-custom text-custom-main text-xs font-medium">
+            </div>
+          </div>
+        </div>
+
         <div>
           <label class="block font-medium text-custom-main mb-1">คำอธิบายรายละเอียดผลงาน</label>
           <textarea [(ngModel)]="workForm.description" rows="3" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main"></textarea>
@@ -896,18 +970,25 @@
           <input type="text" [(ngModel)]="workForm.tags" placeholder="HTML, Active Learning" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main">
         </div>
 
-        <div class="pt-4 border-t border-custom flex justify-end space-x-2">
-          <button (click)="closeWorkModal()" class="px-4 py-2.5 rounded-xl border border-custom text-custom-muted hover:bg-custom-subtle text-xs sm:text-sm">ยกเลิก</button>
-          <button (click)="saveWork()" 
-                  [disabled]="isSavingWork"
-                  class="px-5 py-2.5 rounded-xl bg-custom-accent text-white font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-2 shadow-md transition-all text-xs sm:text-sm">
-            @if (isSavingWork) {
-              <span class="inline-block animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
-              <span>กำลังบันทึกลง TiDB Cloud...</span>
-            } @else {
-              <span>💾 บันทึกผลงาน (ซิงก์ TiDB 100%)</span>
-            }
-          </button>
+        <!-- Sticky Action Footer for Work Modal -->
+        <div class="sticky bottom-0 bg-custom-surface/95 backdrop-blur-md pt-3 pb-1 border-t border-custom flex flex-col sm:flex-row items-center justify-between gap-2 z-20 mt-4 shadow-xl -mx-6 sm:-mx-8 px-6 sm:px-8">
+          <div class="text-[11px] text-custom-muted flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>ซิงก์ตรง TiDB Cloud (บันทึกจริง 100%)</span>
+          </div>
+          <div class="flex items-center space-x-2 w-full sm:w-auto justify-end">
+            <button (click)="closeWorkModal()" class="px-4 py-2.5 rounded-xl border border-custom text-custom-muted hover:bg-custom-subtle text-xs sm:text-sm font-medium">ยกเลิก</button>
+            <button (click)="saveWork()" 
+                    [disabled]="isSavingWork"
+                    class="px-6 py-2.5 rounded-xl bg-custom-accent text-white font-bold hover:opacity-90 disabled:opacity-50 flex items-center gap-2 shadow-lg transition-all text-xs sm:text-sm">
+              @if (isSavingWork) {
+                <span class="inline-block animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
+                <span>กำลังบันทึกลง TiDB Cloud...</span>
+              } @else {
+                <span>💾 บันทึกผลงาน (ซิงก์ TiDB 100%)</span>
+              }
+            </button>
+          </div>
         </div>
       </div>
     </div>

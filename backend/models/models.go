@@ -52,8 +52,11 @@ type Work struct {
 	Image         string    `gorm:"type:longtext" json:"image"`         // ภาพหน้างาน (Cover Image)
 	GalleryImages string    `gorm:"type:longtext" json:"galleryImages"` // ภาพข้างใน (Inside Gallery Images JSON)
 	Description   string    `gorm:"type:text" json:"description"`
-	Link          string    `gorm:"size:512" json:"link"`
+	Link          string    `gorm:"type:longtext" json:"link"`
 	DownloadText  string    `gorm:"size:128" json:"downloadText"`
+	FileName      string    `gorm:"size:255" json:"fileName"`
+	FileSize      string    `gorm:"size:64" json:"fileSize"`
+	FileType      string    `gorm:"size:64" json:"fileType"`
 	Tags          string    `gorm:"size:255" json:"tags"` // comma-separated tags
 	CreatedAt     time.Time `json:"createdAt"`
 	UpdatedAt     time.Time `json:"updatedAt"`

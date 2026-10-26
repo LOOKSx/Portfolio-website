@@ -361,7 +361,10 @@ export class AppComponent implements OnInit {
       image: '',
       description: '',
       link: '#',
-      downloadText: 'ดูตัวอย่างผลงาน / เอกสารโครงงาน',
+      downloadText: 'ดูรายละเอียด',
+      fileName: '',
+      fileSize: '',
+      fileType: '',
       tags: '31901-2009, ปวส.2, สทส2'
     };
     this.workGalleryImages = [];
@@ -467,6 +470,9 @@ export class AppComponent implements OnInit {
         description: this.workForm.description || '',
         link: this.workForm.link || '#',
         downloadText: this.workForm.downloadText || 'ดูรายละเอียด',
+        fileName: this.workForm.fileName || '',
+        fileSize: this.workForm.fileSize || '',
+        fileType: this.workForm.fileType || '',
         tags: this.workForm.tags || ''
       };
 
@@ -782,6 +788,52 @@ export class AppComponent implements OnInit {
       };
       reader.readAsDataURL(file);
     }
+  }
+
+  // Work Attachment File Upload Helper (PDF, Word, Zip, APK, etc.)
+  handleWorkFileUpload(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      const sizeBytes = file.size;
+      let sizeStr = '';
+      if (sizeBytes < 1024 * 1024) {
+        sizeStr = `${(sizeBytes / 1024).toFixed(1)} KB`;
+      } else {
+        sizeStr = `${(sizeBytes / (1024 * 1024)).toFixed(2)} MB`;
+      }
+
+      this.workForm.fileName = file.name;
+      this.workForm.fileSize = sizeStr;
+      this.workForm.fileType = file.type || file.name.split('.').pop()?.toUpperCase() || 'FILE';
+
+      // Auto-suggest downloadText if empty or default
+      if (!this.workForm.downloadText || this.workForm.downloadText === 'ดูรายละเอียด' || this.workForm.downloadText.includes('ดาวน์โหลด')) {
+        this.workForm.downloadText = `ดาวน์โหลด ${file.name} (${sizeStr})`;
+      }
+
+      this.showToastNotification(`📎 กำลังโหลดไฟล์ ${file.name} (${sizeStr})...`);
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        this.workForm.link = result;
+        this.showToastNotification(`✅ อัปโหลดไฟล์ "${file.name}" เรียบร้อยแล้ว (${sizeStr})`);
+      };
+      reader.onerror = () => {
+        this.showToastNotification(`❌ ไม่สามารถอ่านไฟล์ได้`);
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  removeWorkFile(): void {
+    this.workForm.fileName = '';
+    this.workForm.fileSize = '';
+    this.workForm.fileType = '';
+    this.workForm.link = '#';
+    this.workForm.downloadText = 'ดูรายละเอียด';
+    this.showToastNotification('นำไฟล์แนบออกแล้ว');
   }
 
   quickChangeAvatar(event: Event): void {

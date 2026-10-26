@@ -63,6 +63,9 @@ export interface Work {
   description: string;
   link: string;
   downloadText: string;
+  fileName?: string;
+  fileSize?: string;
+  fileType?: string;
   tags: string;
   tagsList?: string[];
   createdAt?: string;
