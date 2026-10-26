@@ -88,80 +88,24 @@ export class PortfolioService {
     }
   ];
 
-  private fallbackWorks: Work[] = [
-    {
-      id: 'work-pusiphong',
-      courseId: 'course-31901-2009',
-      title: 'โครงงานแอปพลิเคชันสำหรับอุปกรณ์เคลื่อนที่ (Mobile Application Project)',
-      category: 'student',
-      categoryLabel: 'ผลงานนักเรียน',
-      date: 'ภาคเรียนที่ 1 ปีการศึกษา 2567',
-      studentName: 'นาย พุศิพงศ์ ราชรักษ์ ปวส.2 สทส2 เลขที่ 12 กลุ่ม 1 (สาขาเทคโนโลยีสารสนเทศ)',
-      image: 'https://images.unsplash.com/photo-1551650975-87deedd944c3?q=80&w=800&auto=format&fit=crop',
-      galleryImages: '["https://images.unsplash.com/photo-1551650975-87deedd944c3?q=80&w=800&auto=format&fit=crop","https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?q=80&w=800&auto=format&fit=crop","https://images.unsplash.com/photo-1526498460520-4c246339dccb?q=80&w=800&auto=format&fit=crop"]',
-      galleryList: [
-        'https://images.unsplash.com/photo-1551650975-87deedd944c3?q=80&w=800&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?q=80&w=800&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1526498460520-4c246339dccb?q=80&w=800&auto=format&fit=crop'
-      ],
-      description: 'ผลงานการพัฒนาซอฟต์แวร์สำหรับอุปกรณ์เคลื่อนที่ ในรายวิชา 31901-2009 โดย นาย พุศิพงศ์ ราชรักษ์ ปวส.2 สทส2 เลขที่ 12 กลุ่ม 1 สาขาเทคโนโลยีสารสนเทศ ประเภทวิชาอุตสาหกรรมดิจิทัลและสารสนเทศ ออกแบบ UI/UX โมบายที่ทันสมัยและเชื่อมต่อระบบฐานข้อมูล TiDB Cloud อย่างมีประสิทธิภาพ',
-      link: '#',
-      downloadText: 'ดูรายละเอียดโครงงานและผลงานแอป',
-      tags: '31901-2009, ปวส.2, สทส2, เทคโนโลยีสารสนเทศ, อุตสาหกรรมดิจิทัล, Flutter, TiDB'
-    },
-    {
-      id: 'work-mobile-api',
-      courseId: 'course-31901-2009',
-      title: 'ระบบเชื่อมต่อ Mobile API และฐานข้อมูล TiDB Cloud Serverless',
-      category: 'media',
-      categoryLabel: 'สื่อนวัตกรรมการสอน',
-      date: 'ภาคเรียนที่ 1 ปีการศึกษา 2567',
-      studentName: 'นาย พุศิพงศ์ ราชรักษ์ (อาจารย์ผู้สอน: ครูอ๋อน)',
-      image: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=800&auto=format&fit=crop',
-      galleryImages: '["https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=800&auto=format&fit=crop"]',
-      galleryList: ['https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=800&auto=format&fit=crop'],
-      description: 'การออกแบบและพัฒนา Backend RESTful API ด้วยภาษา Go (Golang) เพื่อรองรับการรับ-ส่งข้อมูลแบบ Real-time ระหว่างแอปพลิเคชันโมบายและฐานข้อมูล TiDB Cloud Serverless พร้อมระบบความปลอดภัย TLS Encryption',
-      link: '#',
-      downloadText: 'ดูโครงสร้าง API & Data Models',
-      tags: 'Golang, REST API, TiDB Cloud, Distributed SQL, Backend'
-    },
-    {
-      id: 'work-mobile-uiux',
-      courseId: 'course-31901-2009',
-      title: 'การออกแบบสถาปัตยกรรม UI/UX โมบายแอปพลิเคชัน (Mobile Prototype)',
-      category: 'award',
-      categoryLabel: 'รางวัล & ผลสัมฤทธิ์',
-      date: 'ภาคเรียนที่ 1 ปีการศึกษา 2567',
-      studentName: 'นาย พุศิพงศ์ ราชรักษ์ ปวส.2 สทส2',
-      image: 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?q=80&w=800&auto=format&fit=crop',
-      galleryImages: '["https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?q=80&w=800&auto=format&fit=crop"]',
-      galleryList: ['https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?q=80&w=800&auto=format&fit=crop'],
-      description: 'การออกแบบ Wireframe, User Flow และ Interactive Prototype สำหรับแอปพลิเคชันบนสมาร์ตโฟน รองรับการทำงานแบบ Responsive ทั้งอุปกรณ์เคลื่อนที่ระบบ Android และ iOS',
-      link: '#',
-      downloadText: 'ดูตัวอย่าง Interactive Prototype',
-      tags: 'UI/UX, Figma, Prototype, Mobile Design'
-    },
-    {
-      id: 'work-mobile-plan',
-      courseId: 'course-31901-2009',
-      title: 'แผนการจัดการเรียนรู้มุ่งเน้นสมรรถนะ วิชา 31901-2009 การพัฒนาซอฟต์แวร์สำหรับอุปกรณ์เคลื่อนที่',
-      category: 'plan',
-      categoryLabel: 'แผนการสอน & ใบงาน',
-      date: 'มิถุนายน 2567',
-      studentName: 'ผู้จัดทำ: ครูอ๋อน',
-      image: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?q=80&w=800&auto=format&fit=crop',
-      galleryImages: '["https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?q=80&w=800&auto=format&fit=crop"]',
-      galleryList: ['https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?q=80&w=800&auto=format&fit=crop'],
-      description: 'แผนการจัดการเรียนรู้ Active Learning รายวิชา 31901-2009 สาขาเทคโนโลยีสารสนเทศ มุ่งเน้นการฝึกทักษะการปฏิบัติงานจริง การออกแบบสถาปัตยกรรมซอฟต์แวร์โมบาย และการทดสอบระบบ',
-      link: '#',
-      downloadText: 'ดูตัวอย่างแผนการสอน (PDF)',
-      tags: 'แผนการสอน, 31901-2009, ปวส., Active Learning'
-    }
-  ];
+  private fallbackWorks: Work[] = [];
 
   private fallbackDownloads: DownloadItem[] = [];
 
   constructor() {
+    // Clean up any legacy mock sample works from cache
+    try {
+      if (typeof window !== 'undefined') {
+        const cachedWorks = localStorage.getItem('kruaon_tidb_works');
+        if (cachedWorks) {
+          const parsed = JSON.parse(cachedWorks);
+          if (Array.isArray(parsed) && parsed.some((w: any) => w.id && w.id.startsWith('work-mobile-') || w.id === 'work-pusiphong')) {
+            localStorage.removeItem('kruaon_tidb_works');
+          }
+        }
+      }
+    } catch {}
+
     // Check saved theme
     const savedTheme = localStorage.getItem('kruaon_theme_pref');
     if (savedTheme === 'dark') {
@@ -387,7 +331,7 @@ export class PortfolioService {
     if (params.length > 0) url += `?${params.join('&')}`;
 
     const cached = this.getCache<Work[]>('kruaon_tidb_works');
-    const initial = cached && cached.length > 0 ? cached : this.fallbackWorks;
+    const initial = Array.isArray(cached) ? cached : this.fallbackWorks;
 
     return this.http.get<Work[]>(url).pipe(
       map(works => {
