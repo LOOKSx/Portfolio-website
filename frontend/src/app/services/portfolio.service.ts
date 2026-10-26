@@ -465,6 +465,24 @@ export class PortfolioService {
     );
   }
 
+  // --- Large File Attachment Chunking (Up to 50MB on Vercel) ---
+  uploadWorkChunk(workId: string, chunkIndex: number, totalChunks: number, chunkData: string, fileMeta: { fileName?: string; fileSize?: string; fileType?: string }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/works/${workId}/upload-chunk`, {
+      chunkIndex,
+      totalChunks,
+      chunkData,
+      ...fileMeta
+    });
+  }
+
+  getWorkFileMeta(workId: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/works/${workId}/file-meta`);
+  }
+
+  getWorkFileChunk(workId: string, chunkIndex: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/works/${workId}/file-chunk/${chunkIndex}`);
+  }
+
   deleteWork(id: string): Observable<any> {
     return this.http.delete(`${this.apiUrl}/works/${id}`).pipe(
       tap(() => {

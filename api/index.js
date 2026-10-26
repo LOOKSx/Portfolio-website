@@ -214,7 +214,7 @@ function mapCourseRow(row) {
 // -------------------------------------------------------------
 // Helper: Map Work DB row to CamelCase
 // -------------------------------------------------------------
-function mapWorkRow(row) {
+function mapWorkRow(row, includeFileData = false) {
   if (!row) return null;
   return {
     id: row.id,
@@ -232,7 +232,8 @@ function mapWorkRow(row) {
     fileName: row.file_name || '',
     fileSize: row.file_size || '',
     fileType: row.file_type || '',
-    fileData: row.file_data || '',
+    fileData: includeFileData ? (row.file_data || '') : '',
+    hasFile: !!(row.file_name || row.file_size),
     tags: row.tags || '',
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -554,11 +555,134 @@ router.put('/works/:id', async (req, res) => {
   }
 });
 
+// -------------------------------------------------------------
+// Large File Attachment Chunking (Supports up to 50MB on Vercel)
+// -------------------------------------------------------------
+router.post('/works/:id/upload-chunk', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { chunkIndex, totalChunks, chunkData, fileName, fileSize, fileType } = req.body;
+
+    if (chunkIndex === undefined || !chunkData) {
+      return res.status(400).json({ error: 'Missing chunkIndex or chunkData' });
+    }
+
+    const chunkId = `${id}-chunk-${chunkIndex}`;
+    const insertChunkSql = `
+      REPLACE INTO work_file_chunks (id, work_id, chunk_index, total_chunks, chunk_data, created_at)
+      VALUES (?, ?, ?, ?, ?, NOW(3))
+    `;
+    await pool.query(insertChunkSql, [
+      chunkId,
+      id,
+      parseInt(chunkIndex, 10),
+      parseInt(totalChunks, 10) || 1,
+      chunkData
+    ]);
+
+    if (fileName || fileSize || fileType) {
+      await pool.query(
+        'UPDATE works SET file_name = COALESCE(?, file_name), file_size = COALESCE(?, file_size), file_type = COALESCE(?, file_type), updated_at = NOW(3) WHERE id = ?',
+        [fileName || null, fileSize || null, fileType || null, id]
+      );
+    }
+
+    return res.json({
+      status: 'ok',
+      workId: id,
+      chunkIndex,
+      totalChunks,
+      receivedLength: chunkData.length
+    });
+  } catch (err) {
+    console.error('Error uploading chunk:', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/works/:id/file-meta', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [chunks] = await pool.query(
+      'SELECT total_chunks FROM work_file_chunks WHERE work_id = ? ORDER BY chunk_index ASC LIMIT 1',
+      [id]
+    );
+    const [workRows] = await pool.query(
+      'SELECT file_name, file_size, file_type, file_data FROM works WHERE id = ?',
+      [id]
+    );
+
+    if (chunks.length > 0) {
+      return res.json({
+        workId: id,
+        totalChunks: chunks[0].total_chunks,
+        fileName: workRows[0]?.file_name || 'document.pdf',
+        fileSize: workRows[0]?.file_size || '',
+        fileType: workRows[0]?.file_type || 'application/pdf',
+        isChunked: true
+      });
+    }
+
+    if (workRows.length > 0 && workRows[0].file_data) {
+      return res.json({
+        workId: id,
+        totalChunks: 1,
+        fileName: workRows[0].file_name || 'document.pdf',
+        fileSize: workRows[0].file_size || '',
+        fileType: workRows[0].file_type || 'application/pdf',
+        isChunked: false,
+        fileData: workRows[0].file_data
+      });
+    }
+
+    return res.status(404).json({ error: 'No attached file found for this work' });
+  } catch (err) {
+    console.error('Error fetching file meta:', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/works/:id/file-chunk/:chunkIndex', async (req, res) => {
+  try {
+    const { id, chunkIndex } = req.params;
+    const idx = parseInt(chunkIndex, 10) || 0;
+
+    const [chunkRows] = await pool.query(
+      'SELECT chunk_index, total_chunks, chunk_data FROM work_file_chunks WHERE work_id = ? AND chunk_index = ?',
+      [id, idx]
+    );
+
+    if (chunkRows.length > 0) {
+      return res.json({
+        chunkIndex: chunkRows[0].chunk_index,
+        totalChunks: chunkRows[0].total_chunks,
+        chunkData: chunkRows[0].chunk_data
+      });
+    }
+
+    // Fallback: check works.file_data
+    const [workRows] = await pool.query('SELECT file_data FROM works WHERE id = ?', [id]);
+    if (workRows.length > 0 && workRows[0].file_data) {
+      return res.json({
+        chunkIndex: 0,
+        totalChunks: 1,
+        chunkData: workRows[0].file_data
+      });
+    }
+
+    return res.status(404).json({ error: 'Chunk not found' });
+  } catch (err) {
+    console.error('Error fetching chunk:', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 router.delete('/works/:id', async (req, res) => {
   try {
     const id = req.params.id;
+    await pool.query('DELETE FROM work_file_chunks WHERE work_id = ?', [id]);
     await pool.query('DELETE FROM works WHERE id = ?', [id]);
-    return res.json({ message: 'Work deleted successfully' });
+    return res.json({ message: 'Work and attached files deleted successfully' });
   } catch (err) {
     console.error('Error deleting work:', err);
     return res.status(500).json({ error: err.message });

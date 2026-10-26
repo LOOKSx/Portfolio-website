@@ -1,3 +1,4 @@
+import { firstValueFrom } from 'rxjs';
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -13,6 +14,7 @@ import { Teacher, Course, Work, DownloadItem, EducationItem, StatItem } from './
   styleUrl: './app.component.css'
 })
 export class AppComponent implements OnInit {
+  selectedWorkFile: File | null = null;
   public portfolio = inject(PortfolioService);
   private sanitizer = inject(DomSanitizer);
 
@@ -448,10 +450,22 @@ export class AppComponent implements OnInit {
     this.showToastNotification('☁️ กำลังส่งข้อมูลผลงานและไฟล์เข้า TiDB Cloud Serverless...');
 
     if (this.workForm.id) {
-      this.portfolio.updateWork(this.workForm.id, this.workForm as Work).subscribe({
-        next: (updated) => {
+      const workId = this.workForm.id;
+      this.portfolio.updateWork(workId, this.workForm as Work).subscribe({
+        next: async (updated) => {
           const idx = this.works.findIndex(w => w.id === updated.id);
           if (idx !== -1) this.works[idx] = updated;
+
+          if (this.selectedWorkFile) {
+            try {
+              await this.uploadFileChunks(workId, this.selectedWorkFile);
+            } catch (chunkErr) {
+              console.error('File chunk upload error:', chunkErr);
+              alert('⚠️ บันทึกข้อมูลผลงานแล้ว แต่การอัปโหลดไฟล์แนบล้มเหลว กรุณาลองใหม่อีกครั้ง');
+            }
+          }
+
+          this.selectedWorkFile = null;
           this.isSavingWork = false;
           this.showToastNotification(`✅ [ยืนยัน 100%] บันทึกผลงาน "${updated.title}" เข้า TiDB Cloud สำเร็จ! (${new Date().toLocaleTimeString('th-TH')} น.)`);
           this.closeWorkModal();
@@ -465,8 +479,9 @@ export class AppComponent implements OnInit {
         }
       });
     } else {
+      const newWorkId = 'work-' + Date.now();
       const newWork: Work = {
-        id: 'work-' + Date.now(),
+        id: newWorkId,
         courseId: this.workForm.courseId || this.courses[0]?.id || 'course-31901-2009',
         title: this.workForm.title.trim(),
         category: this.workForm.category || 'student',
@@ -482,14 +497,25 @@ export class AppComponent implements OnInit {
         fileName: this.workForm.fileName || '',
         fileSize: this.workForm.fileSize || '',
         fileType: this.workForm.fileType || '',
-        fileData: this.workForm.fileData || '',
+        fileData: '',
         tags: this.workForm.tags || '31901-2009, ปวส.2, สทส2'
       };
 
       this.portfolio.createWork(newWork).subscribe({
-        next: (saved) => {
+        next: async (saved) => {
           this.works.unshift(saved);
           this.updateWorksCountStat();
+
+          if (this.selectedWorkFile) {
+            try {
+              await this.uploadFileChunks(newWorkId, this.selectedWorkFile);
+            } catch (chunkErr) {
+              console.error('File chunk upload error:', chunkErr);
+              alert('⚠️ เพิ่มผลงานสำเร็จแล้ว แต่การอัปโหลดไฟล์แนบล้มเหลว กรุณาลองใหม่อีกครั้ง');
+            }
+          }
+
+          this.selectedWorkFile = null;
           this.isSavingWork = false;
           this.showToastNotification(`✅ [ยืนยัน 100%] เพิ่มผลงานใหม่เข้า TiDB Cloud สำเร็จ! (${new Date().toLocaleTimeString('th-TH')} น.)`);
           this.closeWorkModal();
@@ -849,16 +875,17 @@ export class AppComponent implements OnInit {
     }
   }
 
-  // Work Attachment File Upload Helper (PDF, Word, Zip, APK, etc.)
+  // Work Attachment File Upload Helper (PDF, Word, Zip, APK, etc. - Supports up to 50MB)
   handleWorkFileUpload(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files[0]) {
       const file = input.files[0];
       const sizeBytes = file.size;
+      const maxLimit = 50 * 1024 * 1024; // 50 MB
 
-      // Check file size: Vercel serverless request body has a 4.5 MB limit
-      if (sizeBytes > 3.5 * 1024 * 1024) {
-        alert(`ไฟล์ "${file.name}" มีขนาด ${(sizeBytes / (1024 * 1024)).toFixed(1)} MB ซึ่งเกินโควต้า 3.5 MB สำหรับการบันทึกลงฐานข้อมูลโดยตรง\n\n💡 คำแนะนำ: สำหรับไฟล์ขนาดใหญ่ แนะนำให้อัปโหลดขึ้น Google Drive หรือ OneDrive แล้วนำลิงก์มาวางในช่อง "ลิงก์ผลงานภายนอก" ด้านล่างได้ทันทีครับ`);
+      // Check file size (50 MB Limit)
+      if (sizeBytes > maxLimit) {
+        alert(`ไฟล์ "${file.name}" มีขนาด ${(sizeBytes / (1024 * 1024)).toFixed(1)} MB ซึ่งเกินโควต้า 50 MB\n\n💡 คำแนะนำ: สำหรับไฟล์ที่ใหญ่เกิน 50 MB แนะนำให้อัปโหลดขึ้น Google Drive หรือ OneDrive แล้วนำลิงก์มาวางในช่อง "ลิงก์ผลงานภายนอก" ด้านล่างได้ครับ`);
         input.value = '';
         return;
       }
@@ -870,6 +897,8 @@ export class AppComponent implements OnInit {
         sizeStr = `${(sizeBytes / (1024 * 1024)).toFixed(2)} MB`;
       }
 
+      // Keep native File object for chunked upload
+      this.selectedWorkFile = file;
       this.workForm.fileName = file.name;
       this.workForm.fileSize = sizeStr;
       this.workForm.fileType = file.type || file.name.split('.').pop()?.toUpperCase() || 'FILE';
@@ -879,23 +908,12 @@ export class AppComponent implements OnInit {
         this.workForm.downloadText = `ดาวน์โหลด ${file.name} (${sizeStr})`;
       }
 
-      this.showToastNotification(`📎 กำลังโหลดไฟล์ ${file.name} (${sizeStr})...`);
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        // Store into fileData (DO NOT overwrite workForm.link!)
-        this.workForm.fileData = result;
-        this.showToastNotification(`✅ แนบไฟล์ "${file.name}" เรียบร้อยแล้ว (${sizeStr})`);
-      };
-      reader.onerror = () => {
-        this.showToastNotification(`❌ ไม่สามารถอ่านไฟล์ได้`);
-      };
-      reader.readAsDataURL(file);
+      this.showToastNotification(`📎 แนบไฟล์ "${file.name}" (${sizeStr}) เรียบร้อยแล้ว (รองรับสูงสุด 50 MB พร้อมบันทึกลง TiDB Cloud)`);
     }
   }
 
   removeWorkFile(): void {
+    this.selectedWorkFile = null;
     this.workForm.fileName = '';
     this.workForm.fileSize = '';
     this.workForm.fileType = '';
@@ -906,26 +924,110 @@ export class AppComponent implements OnInit {
     this.showToastNotification('นำไฟล์แนบออกแล้ว');
   }
 
-  // Safe file downloader for works with attached files
-  downloadWorkAttachment(work?: Work | null, event?: Event): void {
-    if (event) event.stopPropagation();
-    if (!work) return;
-    const data = work.fileData || (work.link && work.link.startsWith('data:') ? work.link : null);
-    if (!data) {
-      if (work.link && work.link !== '#') {
-        window.open(work.link, '_blank');
-      } else {
-        this.showToastNotification('ไม่พบไฟล์แนบสำหรับดาวน์โหลด');
+  // --- Chunk Upload & Download Engine (Supports up to 50MB files on TiDB Cloud) ---
+  readBlobAsBase64(blob: Blob): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target?.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  base64ChunksToBlob(chunks: string[], mimeType: string): Blob {
+    const byteArrays: Uint8Array[] = [];
+    for (const chunk of chunks) {
+      let b64 = chunk;
+      const commaIdx = b64.indexOf(',');
+      if (commaIdx !== -1) {
+        b64 = b64.substring(commaIdx + 1);
       }
-      return;
+      const binaryStr = atob(b64);
+      const bytes = new Uint8Array(binaryStr.length);
+      for (let i = 0; i < binaryStr.length; i++) {
+        bytes[i] = binaryStr.charCodeAt(i);
+      }
+      byteArrays.push(bytes);
     }
+    return new Blob(byteArrays, { type: mimeType });
+  }
+
+  triggerBrowserDownload(url: string, filename: string): void {
     const a = document.createElement('a');
-    a.href = data;
-    a.download = work.fileName || 'ผลงาน-พุศิพงศ์.pdf';
+    a.href = url;
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    this.showToastNotification(`📥 กำลังดาวน์โหลด "${work.fileName || 'ไฟล์ผลงาน'}"...`);
+  }
+
+  async uploadFileChunks(workId: string, file: File): Promise<void> {
+    const CHUNK_SIZE = 1.8 * 1024 * 1024; // 1.8 MB per chunk (well within Vercel's 4.5MB payload limit)
+    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+    
+    this.showToastNotification(`☁️ [1/${totalChunks}] เริ่มอัปโหลดไฟล์ "${file.name}" เข้า TiDB Cloud...`);
+    
+    for (let i = 0; i < totalChunks; i++) {
+      const start = i * CHUNK_SIZE;
+      const end = Math.min(file.size, start + CHUNK_SIZE);
+      const slice = file.slice(start, end);
+      const base64Chunk = await this.readBlobAsBase64(slice);
+      
+      const percent = Math.round(((i + 1) / totalChunks) * 100);
+      this.showToastNotification(`☁️ กำลังบันทึกไฟล์เข้า TiDB Cloud: ${percent}% (ชิ้นที่ ${i + 1}/${totalChunks})...`);
+      
+      await firstValueFrom(this.portfolio.uploadWorkChunk(workId, i, totalChunks, base64Chunk, {
+        fileName: file.name,
+        fileSize: this.workForm.fileSize,
+        fileType: file.type
+      }));
+    }
+  }
+
+  async downloadWorkAttachment(work?: Work | null, event?: Event): Promise<void> {
+    if (event) event.stopPropagation();
+    if (!work) return;
+
+    // Small legacy embedded data URL
+    if (work.fileData && work.fileData.startsWith('data:')) {
+      this.triggerBrowserDownload(work.fileData, work.fileName || 'document.pdf');
+      this.showToastNotification(`📥 กำลังดาวน์โหลด "${work.fileName || 'ไฟล์ผลงาน'}"...`);
+      return;
+    }
+
+    this.showToastNotification(`⏳ กำลังเตรียมไฟล์ "${work.fileName || 'ไฟล์ผลงาน'}" จาก TiDB Cloud...`);
+
+    try {
+      const meta = await firstValueFrom(this.portfolio.getWorkFileMeta(work.id));
+      const totalChunks = meta.totalChunks || 1;
+
+      if (!meta.isChunked && meta.fileData) {
+        this.triggerBrowserDownload(meta.fileData, meta.fileName || work.fileName || 'document.pdf');
+        this.showToastNotification(`📥 ดาวน์โหลด "${meta.fileName || work.fileName}" สำเร็จ`);
+        return;
+      }
+
+      const chunks: string[] = [];
+      for (let i = 0; i < totalChunks; i++) {
+        const percent = Math.round(((i + 1) / totalChunks) * 100);
+        this.showToastNotification(`📥 กำลังโหลดไฟล์จาก TiDB Cloud: ${percent}% (ชิ้นที่ ${i + 1}/${totalChunks})...`);
+        const chunkRes = await firstValueFrom(this.portfolio.getWorkFileChunk(work.id, i));
+        chunks.push(chunkRes.chunkData);
+      }
+
+      const blob = this.base64ChunksToBlob(chunks, meta.fileType || 'application/pdf');
+      const blobUrl = URL.createObjectURL(blob);
+      this.triggerBrowserDownload(blobUrl, meta.fileName || work.fileName || 'document.pdf');
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 15000);
+      this.showToastNotification(`✅ ดาวน์โหลด "${meta.fileName || work.fileName}" เรียบร้อยแล้ว`);
+    } catch (err) {
+      console.error('Download error:', err);
+      if (work.link && work.link !== '#') {
+        window.open(work.link, '_blank');
+      } else {
+        this.showToastNotification('❌ ไม่สามารถดาวน์โหลดไฟล์ได้');
+      }
+    }
   }
 
   // --- Canva Embed & Integration Helpers ---
