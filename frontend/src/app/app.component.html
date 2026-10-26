@@ -699,22 +699,70 @@
           </div>
         }
 
-        <!-- Link / Download -->
+        <!-- Link / Attached File Download (Clean card, never print raw Base64 string) -->
         <div class="p-4 rounded-2xl bg-custom-subtle/60 border border-custom">
-          <p class="text-[11px] font-bold text-custom-muted uppercase tracking-widest mb-3">&#x1F517; ลิงก์ผลงาน</p>
+          <p class="text-[11px] font-bold text-custom-muted uppercase tracking-widest mb-3">📎 ไฟล์แนบและลิงก์ผลงาน</p>
           @if (selectedWorkForDetail.link && selectedWorkForDetail.link !== '#') {
-            <a [href]="selectedWorkForDetail.link" target="_blank"
-               class="flex items-center gap-2 text-sm text-custom-accent hover:underline font-medium break-all">
-              <span class="text-lg flex-shrink-0">&#x1F310;</span>
-              {{ selectedWorkForDetail.link }}
-            </a>
-            @if (selectedWorkForDetail.downloadText) {
-              <p class="text-xs text-custom-muted mt-1 ml-7">{{ selectedWorkForDetail.downloadText }}</p>
+            @if (selectedWorkForDetail.link.startsWith('data:') || selectedWorkForDetail.fileName) {
+              <!-- Attached File Display (Clean Card, No Long URL) -->
+              <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-custom-surface border border-emerald-500/30 shadow-sm">
+                <div class="flex items-center gap-3 min-w-0">
+                  <div class="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl flex-shrink-0">
+                    @if (selectedWorkForDetail.fileName?.endsWith('.pdf') || selectedWorkForDetail.link.startsWith('data:application/pdf')) {
+                      📄
+                    } @else if (selectedWorkForDetail.fileName?.endsWith('.apk')) {
+                      📱
+                    } @else if (selectedWorkForDetail.fileName?.endsWith('.zip') || selectedWorkForDetail.fileName?.endsWith('.rar')) {
+                      📦
+                    } @else {
+                      💾
+                    }
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-sm font-bold text-custom-main truncate" [title]="selectedWorkForDetail.fileName || 'เอกสารโครงงาน'">
+                      {{ selectedWorkForDetail.fileName || 'ไฟล์เอกสารประกอบผลงาน' }}
+                    </p>
+                    <p class="text-xs text-custom-muted">
+                      @if (selectedWorkForDetail.fileSize) {
+                        ขนาดไฟล์: <span class="font-num font-semibold text-emerald-600 dark:text-emerald-400">{{ selectedWorkForDetail.fileSize }}</span> • 
+                      }
+                      พร้อมดาวน์โหลด
+                    </p>
+                  </div>
+                </div>
+                <a [href]="selectedWorkForDetail.link" 
+                   [download]="selectedWorkForDetail.fileName || 'document.pdf'"
+                   target="_blank"
+                   class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md flex-shrink-0 transition-all">
+                  <span>📥</span> {{ selectedWorkForDetail.downloadText || 'ดาวน์โหลดไฟล์แนบ' }}
+                </a>
+              </div>
+            } @else {
+              <!-- External Web Link -->
+              <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-custom-surface border border-custom shadow-sm">
+                <div class="flex items-center gap-3 min-w-0">
+                  <div class="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xl flex-shrink-0">
+                    🌐
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-sm font-bold text-custom-main truncate max-w-sm">
+                      {{ selectedWorkForDetail.downloadText || 'เปิดดูผลงาน' }}
+                    </p>
+                    <p class="text-xs text-custom-muted truncate max-w-xs font-mono">
+                      {{ selectedWorkForDetail.link }}
+                    </p>
+                  </div>
+                </div>
+                <a [href]="selectedWorkForDetail.link" target="_blank"
+                   class="px-5 py-2.5 rounded-xl bg-custom-accent hover:opacity-90 text-white font-bold text-xs flex items-center gap-1.5 shadow-md flex-shrink-0 transition-all">
+                  <span>🌐</span> {{ selectedWorkForDetail.downloadText || 'เปิดลิงก์' }}
+                </a>
+              </div>
             }
           } @else {
-            <p class="text-sm text-custom-muted">ยังไม่มีลิงก์ผลงาน
+            <p class="text-sm text-custom-muted">ยังไม่มีไฟล์แนบหรือลิงก์ผลงาน
               @if (portfolio.isEditMode()) {
-                — กดแก้ไขเพื่อเพิ่มลิงก์
+                — กดแก้ไขเพื่อแนบไฟล์
               }
             </p>
           }
@@ -736,9 +784,15 @@
               ปิด
             </button>
             @if (selectedWorkForDetail.link && selectedWorkForDetail.link !== '#') {
-              <a [href]="selectedWorkForDetail.link" target="_blank"
+              <a [href]="selectedWorkForDetail.link" 
+                 [download]="selectedWorkForDetail.fileName || 'document'"
+                 target="_blank"
                  class="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-custom-accent text-white hover:opacity-90 shadow-md flex items-center gap-1.5">
-                &#x1F517; {{ selectedWorkForDetail.downloadText || 'เปิดลิงก์' }}
+                @if (selectedWorkForDetail.link.startsWith('data:') || selectedWorkForDetail.fileName) {
+                  <span>📥</span> {{ selectedWorkForDetail.downloadText || 'ดาวน์โหลดไฟล์' }}
+                } @else {
+                  <span>🌐</span> {{ selectedWorkForDetail.downloadText || 'เปิดลิงก์' }}
+                }
               </a>
             }
           </div>
@@ -945,12 +999,23 @@
 
           <!-- Or External Link URL Input -->
           <div class="pt-2 border-t border-custom/60 space-y-2">
-            <div>
-              <label class="block text-[11px] font-medium text-custom-muted mb-1">
-                🌐 หรือใส่ลิงก์ผลงานภายนอก (URL หรือ ลิงก์ดาวน์โหลด)
-              </label>
-              <input type="text" [(ngModel)]="workForm.link" placeholder="https://... หรืออัปโหลดไฟล์ด้านบน" class="w-full px-3 py-2 rounded-xl bg-custom-surface border border-custom text-custom-main text-xs font-mono">
-            </div>
+            @if (!workForm.link || !workForm.link.startsWith('data:')) {
+              <div>
+                <label class="block text-[11px] font-medium text-custom-muted mb-1">
+                  🌐 หรือใส่ลิงก์ผลงานภายนอก (Google Drive, GitHub, YouTube, เว็บไซต์)
+                </label>
+                <input type="text" [(ngModel)]="workForm.link" placeholder="https://..." class="w-full px-3 py-2 rounded-xl bg-custom-surface border border-custom text-custom-main text-xs font-mono">
+              </div>
+            } @else {
+              <div class="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs flex items-center justify-between">
+                <span class="text-emerald-700 dark:text-emerald-300 font-medium truncate">
+                  📎 ใช้ไฟล์แนบจากเครื่อง: <strong class="font-bold">{{ workForm.fileName }}</strong>
+                </span>
+                <button type="button" (click)="removeWorkFile()" class="text-xs text-red-500 hover:underline font-semibold ml-2 flex-shrink-0">
+                  เปลี่ยนเป็นใส่ลิงก์แทน
+                </button>
+              </div>
+            }
             <div>
               <label class="block text-[11px] font-medium text-custom-muted mb-1">
                 🏷️ ข้อความที่จะแสดงบนปุ่มดาวน์โหลด / เปิดดูผลงาน
