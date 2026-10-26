@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { PortfolioService } from './services/portfolio.service';
 import { Teacher, Course, Work, DownloadItem, EducationItem, StatItem } from './models/portfolio.models';
 
@@ -13,6 +14,7 @@ import { Teacher, Course, Work, DownloadItem, EducationItem, StatItem } from './
 })
 export class AppComponent implements OnInit {
   public portfolio = inject(PortfolioService);
+  private sanitizer = inject(DomSanitizer);
 
   // Data State
   teacher: Teacher | null = null;
@@ -834,6 +836,43 @@ export class AppComponent implements OnInit {
     this.workForm.link = '#';
     this.workForm.downloadText = 'ดูรายละเอียด';
     this.showToastNotification('นำไฟล์แนบออกแล้ว');
+  }
+
+  // --- Canva Embed & Integration Helpers ---
+  isCanvaLink(url?: string): boolean {
+    return !!url && url.toLowerCase().includes('canva.com');
+  }
+
+  getSafeCanvaUrl(url?: string): SafeResourceUrl | null {
+    if (!url || !url.includes('canva.com')) return null;
+    let embedUrl = url.trim();
+    if (embedUrl.includes('canva.com/design/')) {
+      const clean = embedUrl.split('?')[0].split('#')[0];
+      const viewUrl = clean.replace(/\/(edit|watch|view)$/, '/view');
+      embedUrl = viewUrl.endsWith('/view') ? `${viewUrl}?embed` : `${clean}/view?embed`;
+    }
+    return this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl);
+  }
+
+  onWorkLinkChange(): void {
+    if (this.workForm.link && this.isCanvaLink(this.workForm.link)) {
+      if (!this.workForm.downloadText || this.workForm.downloadText === 'ดูรายละเอียด' || this.workForm.downloadText.includes('ดาวน์โหลด')) {
+        this.workForm.downloadText = '🎨 เปิดดูสไลด์ / ผลงานบน Canva';
+      }
+      this.workForm.fileType = 'CANVA';
+      if (!this.workForm.fileName) {
+        this.workForm.fileName = 'Canva Presentation';
+      }
+    }
+  }
+
+  setQuickCanvaLink(): void {
+    const sample = prompt('กรุณาวางลิงก์ผลงาน Canva ของคุณ (เช่น https://www.canva.com/design/.../view):');
+    if (sample && sample.trim()) {
+      this.workForm.link = sample.trim();
+      this.onWorkLinkChange();
+      this.showToastNotification('🎨 แนบลิงก์ Canva เข้าผลงานเรียบร้อย');
+    }
   }
 
   quickChangeAvatar(event: Event): void {
