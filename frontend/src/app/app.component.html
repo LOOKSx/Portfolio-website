@@ -1,4 +1,4 @@
-﻿<!-- =========================================================================
+<!-- =========================================================================
      1. Navigation Header
      ========================================================================= -->
 <header class="border-b border-custom bg-custom-surface/90 backdrop-blur-md sticky top-0 z-40 transition-colors">
@@ -413,8 +413,17 @@
 
       @if (filteredWorks.length === 0) {
         <div class="py-16 text-center">
+          <div class="w-14 h-14 mx-auto mb-3 rounded-2xl bg-custom-subtle/50 flex items-center justify-center text-2xl text-custom-muted">
+            🔍
+          </div>
           <h4 class="text-base font-bold text-custom-main">ไม่พบผลงานที่ตรงกับเงื่อนไขการค้นหา</h4>
           <p class="text-xs text-custom-muted mt-1">ลองเปลี่ยนการเลือกรหัสวิชา หรือคำค้นหาใหม่อีกครั้ง</p>
+          @if (searchQuery || selectedCourseFilter !== 'all' || selectedCategoryFilter !== 'all') {
+            <button (click)="searchQuery = ''; selectedCourseFilter = 'all'; selectedCategoryFilter = 'all'" 
+                    class="mt-4 px-4 py-2 rounded-xl bg-custom-accent/10 hover:bg-custom-accent/20 text-custom-accent text-xs font-semibold transition-all inline-flex items-center gap-1.5 cursor-pointer">
+              <span>↻</span> ล้างตัวกรองทั้งหมด
+            </button>
+          }
         </div>
       }
 

@@ -18,10 +18,10 @@ export class AppComponent implements OnInit {
   public portfolio = inject(PortfolioService);
   private sanitizer = inject(DomSanitizer);
 
-  // Data State
-  teacher: Teacher | null = null;
-  courses: Course[] = [];
-  works: Work[] = [];
+  // Data State (Pre-populated from cache/fallback for instant 0ms render - zero loss guarantee)
+  teacher: Teacher | null = this.portfolio.getInitialTeacher();
+  courses: Course[] = this.portfolio.getInitialCourses();
+  works: Work[] = this.portfolio.getInitialWorks();
   downloads: DownloadItem[] = [];
 
   // Filter & Search State
@@ -92,14 +92,21 @@ export class AppComponent implements OnInit {
   }
 
   loadAllData(): void {
+    this.updateWorksCountStat();
     this.portfolio.getTeacher().subscribe(t => {
-      this.teacher = t;
-      this.updateWorksCountStat();
+      if (t) {
+        this.teacher = t;
+        this.updateWorksCountStat();
+      }
     });
-    this.portfolio.getCourses().subscribe(c => this.courses = c);
+    this.portfolio.getCourses().subscribe(c => {
+      if (c && c.length > 0) this.courses = c;
+    });
     this.portfolio.getWorks().subscribe(w => {
-      this.works = w;
-      this.updateWorksCountStat();
+      if (w && w.length > 0) {
+        this.works = w;
+        this.updateWorksCountStat();
+      }
     });
     this.portfolio.getDownloads().subscribe(d => this.downloads = d);
   }

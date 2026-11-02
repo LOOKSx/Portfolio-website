@@ -110,11 +110,11 @@ export class PortfolioService {
     {
       id: 'work-1793603453699',
       courseId: 'course-31901-2009',
-      title: 'ใบงานที่ 2',
+      title: 'ใบงานที่ 2 Inventory Tool',
       category: 'student',
       categoryLabel: 'ผลงานนักเรียน',
-      date: 'ภาคเรียนที่ 1 ปีการศึกษา 2567',
-      studentName: 'นาย พุศิพงศ์ ราชรักษ์ ปวส.2 สทส2 เลขที่ 12 กลุ่ม 1',
+      date: 'ภาคเรียนที่ 2 ปีการศึกษา 2569',
+      studentName: 'นาย พุศิพงศ์ ราชรักษ์ ปวส.2 2สทส1 เลขที่ 11 กลุ่ม 1',
       image: 'https://images.unsplash.com/photo-1551650975-87deedd944c3?q=80&w=800&auto=format&fit=crop',
       description: 'การใช้งาน AppSheet\n(ให้นักศึกษานำการใช้งาน AppSheet ข้อ 1-10 ใส่ใน G-site ของแต่ละคน )\n\n[1-วิธีคิดออกแบบในการสร้างแอพของคุณด้วย-AppSheet](https://drive.google.com/file/d/1LNqFp_DLIl9ZJYeAm8BRNv1WK8QiTIsX/view?usp=drive_link)\n\n[2-สร้างฐานข้อมูลใน-Google-Sheet](https://drive.google.com/file/d/13q1NLXN-83-1m3xiz5R-ekpSynDILllj/view?usp=drive_link)\n\n[3-เริ่มสร้างแอพพลิเคชั่นใน-appsheet](https://drive.google.com/file/d/1_y3VQGcgP_dMeX52_lnthwx1ldXb6aEv/view?usp=drive_link)\n\n[4-เมนูและเครื่องมือต่าง-ๆ-ใน-AppSheet](https://drive.google.com/file/d/1uh4yIoASexDgglO7C3BA8bG432ASbLBr/view?usp=drive_link)\n\n[5-การตั้งค่าชนิดข้อมูลเบื้องต้น](https://drive.google.com/file/d/16o5onZHiiGnRhYSScGJqrHFFBNcDsecr/view?usp=drive_link)\n\n[6-การตั้งค่าชนิดข้อมูลแบบละเอียด-NumberEnumEnumList](https://drive.google.com/file/d/15sxQer38ci7by8OytW6v8xRpBGU2JMEn/view?usp=drive_link)\n\n[7-การทดสอบบันทึกข้อมูลจาก-AppSheet-1](https://drive.google.com/file/d/1EdqugXlhaezRp_VQwuqSiS2oUBTV6t42/view?usp=drive_link)\n\n[8-การเพิ่มคอลัมน์ในภายหลังและตั้งค่า-imageLatLong](https://drive.google.com/file/d/1ohKXY3gJbu3FwptdUtSxCL5-rDZL58bX/view?usp=drive_link)\n\n[9-การตัั้งค่า-View-Desk](https://drive.google.com/file/d/16jbMM40_W_a4_mK4Is4H2QM6P0qb1lZ9/view?usp=drive_link)\n\n[10-การตัั้งค่า-View-Detail](https://drive.google.com/file/d/1e0VFRhzheEANzm8iqjatgzK3uoTXZupB/view?usp=drive_link)',
       link: '#',
@@ -122,7 +122,7 @@ export class PortfolioService {
       fileName: '',
       fileSize: '',
       fileType: '',
-      tags: '31901-2009, ปวส.2, สทส2'
+      tags: '31901-2009, ปวส.2, 2สทส1'
     }
   ];
 
@@ -249,6 +249,23 @@ export class PortfolioService {
     } catch (e) {
       // Ignore if quota or private mode
     }
+  }
+
+  // Initial Data Getters (Guarantee 0-delay instant display, zero loss, zero empty flash)
+  getInitialTeacher(): Teacher {
+    const cached = this.getCache<Teacher>('kruaon_tidb_teacher');
+    return cached ? this.parseTeacherData(cached) : { ...this.fallbackTeacher };
+  }
+
+  getInitialCourses(): Course[] {
+    const cached = this.getCache<Course[]>('kruaon_tidb_courses');
+    return Array.isArray(cached) && cached.length > 0 ? cached : [...this.fallbackCourses];
+  }
+
+  getInitialWorks(): Work[] {
+    const cached = this.getCache<Work[]>('kruaon_tidb_works');
+    const list = Array.isArray(cached) && cached.length > 0 ? cached : this.fallbackWorks;
+    return list.map(w => this.enrichWork({ ...w }));
   }
 
   // --- Teacher / Student Profile ---
@@ -389,18 +406,22 @@ export class PortfolioService {
 
     return this.http.get<Work[]>(url).pipe(
       map(works => {
-        const enriched = works.map(w => this.enrichWork(w));
-        if (!courseId || courseId === 'all') {
-          this.setCache('kruaon_tidb_works', enriched);
-          this.fallbackWorks = [...enriched];
+        if (Array.isArray(works) && works.length > 0) {
+          const enriched = works.map(w => this.enrichWork(w));
+          if (!courseId || courseId === 'all') {
+            this.setCache('kruaon_tidb_works', enriched);
+            this.fallbackWorks = [...enriched];
+          }
+          return enriched;
         }
-        return enriched;
+        // Safeguard: Never clear works if API returns empty array unexpectedly
+        return initial.map(w => this.enrichWork({ ...w }));
       }),
       catchError(() => {
         let filtered = [...initial];
         if (courseId && courseId !== 'all') filtered = filtered.filter(w => w.courseId === courseId);
         if (category && category !== 'all') filtered = filtered.filter(w => w.category === category);
-        return of(filtered.map(w => this.enrichWork(w)));
+        return of(filtered.map(w => this.enrichWork({ ...w })));
       })
     );
   }
