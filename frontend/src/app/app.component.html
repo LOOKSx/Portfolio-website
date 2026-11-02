@@ -371,7 +371,7 @@
                   {{ w.title }}
                 </h4>
                 <p class="text-xs text-custom-muted line-clamp-3 mb-3 leading-relaxed">
-                  {{ w.description }}
+                  {{ getCleanDescription(w.description) }}
                 </p>
               </div>
 
@@ -692,7 +692,7 @@
         @if (selectedWorkForDetail.description) {
           <div class="p-4 rounded-2xl bg-custom-subtle/60 border border-custom">
             <p class="text-[11px] font-bold text-custom-muted uppercase tracking-widest mb-3">&#x1F4DD; รายละเอียดผลงาน</p>
-            <p class="text-sm sm:text-base text-custom-main leading-relaxed whitespace-pre-line">{{ selectedWorkForDetail.description }}</p>
+            <div class="text-sm sm:text-base text-custom-main leading-relaxed space-y-1" [innerHTML]="formatDescription(selectedWorkForDetail.description)"></div>
           </div>
         }
 
@@ -1084,8 +1084,20 @@
         </div>
 
         <div>
-          <label class="block font-medium text-custom-main mb-1">คำอธิบายรายละเอียดผลงาน</label>
-          <textarea [(ngModel)]="workForm.description" rows="3" class="w-full px-3 py-2 rounded-xl bg-custom-subtle border border-custom text-custom-main"></textarea>
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 mb-1.5">
+            <label class="block font-medium text-custom-main">📝 คำอธิบายรายละเอียดผลงาน</label>
+            <button type="button" (click)="insertLinkToDescription()" 
+                    class="px-2.5 py-1 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 font-bold text-xs flex items-center gap-1 border border-blue-500/30 transition-all shadow-sm w-fit">
+              <span>🔗</span> + แทรกข้อความพร้อมลิงก์ [ข้อความ](URL)
+            </button>
+          </div>
+          <textarea [(ngModel)]="workForm.description" rows="5" 
+                    placeholder="พิมพ์รายละเอียดเนื้อหา...&#10;• สามารถใส่ลิงก์ในข้อความได้ เช่น [1-วิธีคิดออกแบบ](https://drive.google.com/...)&#10;• หรือวางลิงก์ https://... เพื่อให้กดเปิดได้ทันที" 
+                    class="w-full px-3 py-2.5 rounded-xl bg-custom-subtle border border-custom text-custom-main font-sans text-xs sm:text-sm focus:border-blue-500 outline-none"></textarea>
+          <div class="mt-1.5 p-2 rounded-lg bg-blue-500/5 border border-blue-500/20 text-[11px] text-custom-muted flex items-start gap-1.5">
+            <span class="text-blue-500">💡</span>
+            <span><strong>วิธีใส่ลิงก์ในข้อความ:</strong> พิมพ์ <code>[ข้อความที่ต้องการแสดง](https://ลิงก์ของคุณ)</code> หรือกดปุ่ม <strong>"+ แทรกข้อความพร้อมลิงก์"</strong> ด้านบน ข้อความนั้นจะกลายเป็นตัวหนังสือสีฟ้ามีขีดเส้นใต้ที่กดคลิกเปิดได้ทันที</span>
+          </div>
         </div>
 
         <div>

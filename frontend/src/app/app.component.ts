@@ -2,7 +2,7 @@ import { firstValueFrom } from 'rxjs';
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { DomSanitizer, SafeResourceUrl, SafeHtml } from '@angular/platform-browser';
 import { PortfolioService } from './services/portfolio.service';
 import { Teacher, Course, Work, DownloadItem, EducationItem, StatItem } from './models/portfolio.models';
 
@@ -1102,6 +1102,63 @@ export class AppComponent implements OnInit {
         this.showToastNotification('❌ ไม่สามารถดาวน์โหลดไฟล์ได้');
       }
     }
+  }
+
+  // --- Text with Clickable Links Helpers (Markdown [text](url) & Auto-URLs) ---
+  formatDescription(text?: string): SafeHtml {
+    if (!text) return '';
+
+    // 1. Escape HTML
+    let escaped = text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    // 2. Extract Markdown links [text](url)
+    const links: string[] = [];
+    escaped = escaped.replace(/\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)/g, (match, linkText, url) => {
+      const idx = links.length;
+      links.push(
+        `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 font-bold underline hover:text-blue-700 hover:underline inline-flex items-center gap-1 cursor-pointer transition-colors">${linkText} <span class="text-[11px] opacity-80">↗</span></a>`
+      );
+      return `___MDLINK_${idx}___`;
+    });
+
+    // 3. Convert bare URLs (https://... or http://...) to links
+    escaped = escaped.replace(/(https?:\/\/[^\s<]+)/g, (match, url) => {
+      return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 underline hover:text-blue-700 font-mono text-xs break-all inline-flex items-center gap-0.5">${url} <span class="text-[10px]">↗</span></a>`;
+    });
+
+    // 4. Restore Markdown links
+    links.forEach((linkHtml, idx) => {
+      escaped = escaped.replace(`___MDLINK_${idx}___`, linkHtml);
+    });
+
+    // 5. Convert newlines to <br>
+    escaped = escaped.replace(/\n/g, '<br>');
+
+    return this.sanitizer.bypassSecurityTrustHtml(escaped);
+  }
+
+  getCleanDescription(text?: string): string {
+    if (!text) return '';
+    return text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)/g, '$1');
+  }
+
+  insertLinkToDescription(): void {
+    const text = prompt('กรุณากรอกข้อความที่จะแสดงเป็นลิงก์ (เช่น "1-วิธีคิดออกแบบในการสร้างแอพด้วย-AppSheet"):');
+    if (!text || !text.trim()) return;
+
+    const url = prompt(`กรุณากรอกลิงก์ URL สำหรับ "${text.trim()}" (เช่น https://drive.google.com/...):\n(สามารถเปิดดูหรือดาวน์โหลดได้ทันทีเมื่อกดข้อความนี้)`, 'https://');
+    if (!url || !url.trim() || url.trim() === 'https://') return;
+
+    const mdLink = `[${text.trim()}](${url.trim()})`;
+    if (this.workForm.description && this.workForm.description.trim()) {
+      this.workForm.description = this.workForm.description.trim() + `\n${mdLink}`;
+    } else {
+      this.workForm.description = mdLink;
+    }
+    this.showToastNotification('🔗 แทรกข้อความพร้อมลิงก์เรียบร้อย');
   }
 
   // --- Canva Embed & Integration Helpers ---
