@@ -1106,7 +1106,7 @@ export class AppComponent implements OnInit {
 
   // --- Canva Embed & Integration Helpers ---
   isCanvaLink(url?: string): boolean {
-    return !!url && url.toLowerCase().includes('canva.com');
+    return !!url && (url.toLowerCase().includes('canva.com') || url.toLowerCase().includes('canva.link'));
   }
 
   getSafeCanvaUrl(url?: string): SafeResourceUrl | null {

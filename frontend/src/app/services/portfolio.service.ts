@@ -45,24 +45,24 @@ export class PortfolioService {
   private fallbackTeacher: Teacher = {
     id: 1,
     name: 'นาย พุศิพงศ์ ราชรักษ์',
-    fullName: 'นาย พุศิพงศ์ ราชรักษ์ (สทส2 เลขที่ 12)',
-    position: 'นักศึกษา ปวส.2 สทส2 เลขที่ 12 กลุ่ม 1',
-    school: 'วิทยาลัยอาชีวศึกษา / วิทยาลัยเทคนิค (สังกัด สอศ.)',
+    fullName: 'นาย พุศิพงศ์ ราชรักษ์ (1สทส2 เลขที่ 11)',
+    position: 'นักศึกษา ปวส.2 1สทส2 เลขที่ 11 กลุ่ม 1',
+    school: 'วิทยาลัยเทคนิคนครศรีธรรมราช',
     department: 'สาขาเทคโนโลยีสารสนเทศ ประเภทวิชาอุตสาหกรรมดิจิทัลและสารสนเทศ',
-    instructor: 'ครูอ๋อน (อาจารย์อ๋อน)',
-    instructorRole: 'อาจารย์ผู้สอน / ที่ปรึกษา',
-    studentGroup: 'ปวส.2 สทส2 เลขที่ 12',
-    email: 'pusiphong.it@example.ac.th',
-    phone: '08x-xxx-xxxx',
-    lineId: '@pusiphong_it',
+    instructor: '-',
+    instructorRole: 'อาจารย์ผู้สอน ',
+    studentGroup: 'ปวส.2 1สทส2 เลขที่ 12',
+    email: 'cenbu20@gmail.com',
+    phone: '0980178005',
+    lineId: 'Phuttiphong',
     avatar: '/pusiphong.jpg',
-    bio: 'นักศึกษาหลักสูตรประกาศนียบัตรวิชาชีพชั้นสูง (ปวส.) สาขาวิชาเทคโนโลยีสารสนเทศ มุ่งมั่นพัฒนาทักษะด้านการพัฒนาซอฟต์แวร์สำหรับอุปกรณ์เคลื่อนที่ (Mobile Application) ทั้งระบบ Android/iOS ด้วย Flutter และการเชื่อมต่อ Web API ด้วย Golang & TiDB Database',
-    teachingPhilosophy: 'เรียนรู้ด้วยการลงมือปฏิบัติจริง (Hands-on Practice) มุ่งมั่นพัฒนาซอฟต์แวร์เพื่อตอบโจทย์ผู้ใช้งานจริง',
+    bio: 'นักศึกษาหลักสูตรประกาศนียบัตรวิชาชีพชั้นสูง',
+    teachingPhilosophy: 'เรียนรู้ด้วยการลงมือปฏิบัติจริง',
     stats: [
-      { label: 'ระดับชั้น/กลุ่ม', value: 'ปวส.2', unit: 'สทส2 เลขที่ 12' },
+      { label: 'ระดับชั้น/กลุ่ม', value: 'ปวส.2', unit: '1สทส2 เลขที่ 11' },
       { label: 'รหัสวิชาหลัก', value: '31901-2009', unit: 'โมบายแอป' },
-      { label: 'โครงงานผลงาน', value: '4', unit: 'ชิ้นงาน' },
-      { label: 'อาจารย์ผู้สอน', value: 'ครูอ๋อน', unit: 'ที่ปรึกษา' }
+      { label: 'โครงงานผลงาน', value: '2', unit: 'ชิ้นงาน' },
+      { label: 'อาจารย์ผู้สอน', value: '-', unit: 'วิชา' }
     ],
     education: [
       { degree: 'ประกาศนียบัตรวิชาชีพชั้นสูง (ปวส.) สาขาวิชาเทคโนโลยีสารสนเทศ', institution: 'ประเภทวิชาอุตสาหกรรมดิจิทัลและสารสนเทศ', year: 'ปัจจุบัน (2567)' },
@@ -89,7 +89,42 @@ export class PortfolioService {
     }
   ];
 
-  private fallbackWorks: Work[] = [];
+  private fallbackWorks: Work[] = [
+    {
+      id: 'work-1793009233318',
+      courseId: 'course-31901-2009',
+      title: 'ใบงานที่ 1',
+      category: 'student',
+      categoryLabel: 'ผลงานนักเรียน',
+      date: 'ภาคเรียนที่ 2 ปีการศึกษา 2569',
+      studentName: 'นาย พุศิพงศ์ ราชรักษ์ ปวส.2 1สทส2 เลขที่ 11 กลุ่ม 1',
+      image: 'https://images.unsplash.com/photo-1551650975-87deedd944c3?q=80&w=800&auto=format&fit=crop',
+      description: 'จากภาพคำสั่ง ใบงานหน่วยที่ 1 ให้นักศึกษาสร้างชิ้นงานใน Canva พร้อมยกตัวอย่างพร้อมภาพประกอบ มีรายละเอียดหัวข้อที่ต้องทำดังนี้ครับ:\n1. ฮาร์ดแวร์ (Hardware) 3 ข้อ อธิบายรายละเอียด\n2. ซอฟต์แวร์ (Software) 3 ข้อ อธิบายรายละเอียด\n3. บุคลากร (People ware) 3 ข้อ อธิบายรายละเอียด\n4. ข้อมูลและสารสนเทศ (Data / Information) 3 ข้อ\n5. กระบวนการทำงาน (Procedure) 1 ข้อ อธิบายรายละเอียด\n6. AppSheet คืออะไร',
+      link: 'https://canva.link/xlm8w7ekzohdxur',
+      downloadText: 'ดาวน์โหลด องค์ประกอบระบบสารสนเทศและ AppSheet.pdf (5.94 MB)',
+      fileName: 'องค์ประกอบระบบสารสนเทศและ AppSheet.pdf',
+      fileSize: '5.94 MB',
+      fileType: 'application/pdf',
+      tags: '31901-2009, ปวส.2, 1สทส2'
+    },
+    {
+      id: 'work-1793603453699',
+      courseId: 'course-31901-2009',
+      title: 'ใบงานที่ 2',
+      category: 'student',
+      categoryLabel: 'ผลงานนักเรียน',
+      date: 'ภาคเรียนที่ 1 ปีการศึกษา 2567',
+      studentName: 'นาย พุศิพงศ์ ราชรักษ์ ปวส.2 สทส2 เลขที่ 12 กลุ่ม 1',
+      image: 'https://images.unsplash.com/photo-1551650975-87deedd944c3?q=80&w=800&auto=format&fit=crop',
+      description: 'การใช้งาน AppSheet\nhttps://drive.google.com/file/d/1uh4yIoASexDgglO7C3BA8bG432ASbLBr/view\n\n(ให้นักศึกษานำการใช้งาน AppSheet ข้อ 1-10 ใส่ใน G-site ของแต่ละคน )\n\n1-วิธีคิดออกแบบในการสร้างแอพของคุณด้วย-AppSheet\n\n2-สร้างฐานข้อมูลใน-Google-Sheet\n\n3-เริ่มสร้างแอพพลิเคชั่นใน-appsheet\n\n4-เมนูและเครื่องมือต่าง-ๆ-ใน-AppSheet\n\n5-การตั้งค่าชนิดข้อมูลเบื้องต้น\n\n6-การตั้งค่าชนิดข้อมูลแบบละเอียด-NumberEnumEnumList\n\n7-การทดสอบบันทึกข้อมูลจาก-AppSheet-1\n\n8-การเพิ่มคอลัมน์ในภายหลังและตั้งค่า-imageLatLong\n\n9-การตัั้งค่า-View-Desk\n\n10-การตัั้งค่า-View-Detail',
+      link: '#',
+      downloadText: 'ดูรายละเอียด',
+      fileName: '',
+      fileSize: '',
+      fileType: '',
+      tags: '31901-2009, ปวส.2, สทส2'
+    }
+  ];
 
   private fallbackDownloads: DownloadItem[] = [];
 
