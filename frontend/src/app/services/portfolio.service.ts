@@ -558,6 +558,26 @@ export class PortfolioService {
     );
   }
 
+  // --- Permanent Indestructible Backup & Lock (ห้ามหาย 100%) ---
+  getDatabaseBackup(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/backup`).pipe(
+      tap(backup => {
+        if (backup) {
+          try {
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('kruaon_locked_backup_snapshot', JSON.stringify(backup));
+              localStorage.setItem('kruaon_locked_backup_time', new Date().toISOString());
+            }
+          } catch {}
+        }
+      })
+    );
+  }
+
+  restoreDatabase(backupData: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/restore`, backupData);
+  }
+
   // --- Large File Attachment Chunking (Up to 50MB on Vercel) ---
   uploadWorkChunk(workId: string, chunkIndex: number, totalChunks: number, chunkData: string, fileMeta: { fileName?: string; fileSize?: string; fileType?: string }): Observable<any> {
     return this.http.post(`${this.apiUrl}/works/${workId}/upload-chunk`, {

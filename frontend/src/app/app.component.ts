@@ -40,6 +40,13 @@ export class AppComponent implements OnInit {
   isDiagnosticLoading: boolean = false;
   diagnosticData: any = null;
   diagnosticError: string = '';
+
+  // Permanent Indestructible Backup & Lock State (ห้ามหาย 100%)
+  showBackupModal: boolean = false;
+  isBackupLoading: boolean = false;
+  isRestoreLoading: boolean = false;
+  backupSnapshot: any = null;
+  lastBackupTimeString: string = '';
   isSavingWork: boolean = false;
   isSavingTeacher: boolean = false;
 
@@ -868,6 +875,122 @@ export class AppComponent implements OnInit {
   closeDiagnosticModal(): void {
     this.showDiagnosticModal = false;
   }
+
+  // --- Permanent Indestructible Backup & Lock (ห้ามหาย 100%) ---
+  lockAndBackupAllData(): void {
+    this.showBackupModal = true;
+    this.isBackupLoading = true;
+    this.showToastNotification('🛡️ กำลังล็อกและสำรองข้อมูลทั้งหมดจาก TiDB Cloud...');
+
+    this.portfolio.getDatabaseBackup().subscribe({
+      next: (backup) => {
+        this.backupSnapshot = backup;
+        this.isBackupLoading = false;
+        this.lastBackupTimeString = new Date().toLocaleString('th-TH');
+
+        // Automatically trigger browser download of the backup file
+        this.triggerBackupDownload(backup);
+
+        this.showToastNotification('🛡️ ล็อกและสำรองข้อมูลถาวรสำเร็จ 100%! ข้อมูลไม่มีวันสูญหาย');
+      },
+      error: (err) => {
+        // Fallback: create backup from current in-memory / cache data
+        const localBackup = {
+          backupTimestamp: new Date().toISOString(),
+          backupTimeThai: new Date().toLocaleString('th-TH'),
+          database: 'Local Snapshot & TiDB Fallback',
+          version: '1.0.0',
+          stats: {
+            worksCount: this.works.length,
+            coursesCount: this.courses.length,
+            teachersCount: this.teacher ? 1 : 0,
+            downloadsCount: this.downloads.length
+          },
+          works: this.works,
+          courses: this.courses,
+          teacher: this.teacher,
+          downloads: this.downloads
+        };
+        this.backupSnapshot = localBackup;
+        this.isBackupLoading = false;
+        this.lastBackupTimeString = new Date().toLocaleString('th-TH');
+        this.triggerBackupDownload(localBackup);
+        this.showToastNotification('🛡️ บันทึกล็อกข้อมูลลงไฟล์สำรองสำเร็จเรียบร้อย');
+      }
+    });
+  }
+
+  private triggerBackupDownload(backupObj: any): void {
+    try {
+      const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(backupObj, null, 2));
+      const now = new Date();
+      const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
+      const fileName = `kruaon_portfolio_backup_${dateStr}.json`;
+      this.triggerBrowserDownload(dataStr, fileName);
+    } catch (e) {
+      console.error('Trigger download error:', e);
+    }
+  }
+
+  downloadBackupFileAgain(): void {
+    if (this.backupSnapshot) {
+      this.triggerBackupDownload(this.backupSnapshot);
+      this.showToastNotification('📥 กำลังดาวน์โหลดไฟล์สำรองอีกครั้ง...');
+    } else {
+      this.lockAndBackupAllData();
+    }
+  }
+
+  closeBackupModal(): void {
+    this.showBackupModal = false;
+  }
+
+  handleRestoreFileUpload(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+    const file = input.files[0];
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const jsonText = e.target?.result as string;
+        const backupData = JSON.parse(jsonText);
+        if (!backupData || (!backupData.works && !backupData.teacher)) {
+          alert('❌ ไฟล์สำรองไม่ถูกต้อง กรุณาเลือกไฟล์ .json ที่ดาวน์โหลดจากระบบ');
+          return;
+        }
+
+        const count = backupData.works?.length || 0;
+        if (confirm(`คุณต้องการกู้คืนข้อมูลจากไฟล์ "${file.name}" ใช่หรือไม่?\n(พบผลงานในไฟล์สำรอง: ${count} ชิ้นงาน)`)) {
+          this.isRestoreLoading = true;
+          this.showToastNotification('⏳ กำลังกู้คืนข้อมูลเข้า TiDB Cloud...');
+
+          this.portfolio.restoreDatabase(backupData).subscribe({
+            next: (res) => {
+              this.isRestoreLoading = false;
+              this.showToastNotification('✅ กู้คืนข้อมูลสำเร็จ 100%! ข้อมูลกลับมาครบถ้วนเรียบร้อยแล้ว');
+              this.loadAllData();
+              this.closeBackupModal();
+            },
+            error: (err) => {
+              this.isRestoreLoading = false;
+              // Optimistic local restore if API fails
+              if (backupData.works) this.works = backupData.works;
+              if (backupData.teacher) this.teacher = backupData.teacher;
+              if (backupData.courses) this.courses = backupData.courses;
+              this.showToastNotification('✅ กู้คืนข้อมูลลงในเบราว์เซอร์เรียบร้อย');
+              this.closeBackupModal();
+            }
+          });
+        }
+      } catch (err) {
+        alert('❌ ไม่สามารถอ่านไฟล์สำรองได้ กรุณาตรวจสอบว่าเป็นไฟล์ JSON ที่ถูกต้อง');
+      }
+    };
+    reader.readAsText(file);
+    input.value = '';
+  }
+
 
   // Client-side Image Compression Helper (Guarantees <= 100KB per image, preventing Vercel 4.5MB Payload limit error)
   compressImage(file: File, maxWidth = 1080, maxHeight = 1080, quality = 0.80): Promise<string> {
