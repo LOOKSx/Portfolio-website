@@ -216,6 +216,23 @@ function mapCourseRow(row) {
 // -------------------------------------------------------------
 function mapWorkRow(row, includeFileData = false) {
   if (!row) return null;
+  let links = [];
+  if (row.links_json) {
+    try {
+      const parsed = typeof row.links_json === 'string' ? JSON.parse(row.links_json) : row.links_json;
+      if (Array.isArray(parsed)) {
+        links = parsed.filter(item => item && (item.url || item.link)).map(item => ({
+          title: item.title || 'ลิงก์ผลงาน',
+          url: item.url || item.link
+        }));
+      }
+    } catch {}
+  }
+  // Fallback to row.link if links array is empty
+  if (links.length === 0 && row.link && row.link !== '#' && !row.link.startsWith('data:')) {
+    links = [{ title: row.download_text || 'ลิงก์ผลงาน', url: row.link }];
+  }
+
   return {
     id: row.id,
     courseId: row.course_id || '',
@@ -228,6 +245,8 @@ function mapWorkRow(row, includeFileData = false) {
     galleryImages: row.gallery_images || '[]',
     description: row.description || '',
     link: row.link || '#',
+    links: links,
+    linksJson: row.links_json || JSON.stringify(links),
     downloadText: row.download_text || 'ดูรายละเอียด',
     fileName: row.file_name || '',
     fileSize: row.file_size || '',
@@ -466,9 +485,17 @@ router.post('/works', async (req, res) => {
     const id = body.id || `work-${Date.now()}`;
     const galleryImages = typeof body.galleryImages === 'string' ? body.galleryImages : JSON.stringify(body.galleryImages || body.galleryList || []);
 
+    let links = Array.isArray(body.links) ? body.links.filter(l => l && (l.url || l.link)) : [];
+    if (links.length === 0 && body.link && body.link !== '#' && !body.link.startsWith('data:')) {
+      links = [{ title: body.downloadText || 'ลิงก์ผลงาน', url: body.link }];
+    }
+    const linksJson = JSON.stringify(links);
+    const primaryLink = links.length > 0 ? (links[0].url || links[0].link) : (body.link || '#');
+    const primaryText = links.length > 0 ? (links[0].title || 'ดูรายละเอียด') : (body.downloadText || 'ดูรายละเอียด');
+
     const insertSql = `
-      INSERT INTO works (id, course_id, title, category, category_label, date, student_name, image, gallery_images, description, link, download_text, file_name, file_size, file_type, file_data, tags, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(3), NOW(3))
+      INSERT INTO works (id, course_id, title, category, category_label, date, student_name, image, gallery_images, description, link, links_json, download_text, file_name, file_size, file_type, file_data, tags, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(3), NOW(3))
     `;
     await pool.query(insertSql, [
       id,
@@ -481,8 +508,9 @@ router.post('/works', async (req, res) => {
       body.image || '',
       galleryImages,
       body.description || '',
-      body.link || '#',
-      body.downloadText || 'ดูรายละเอียด',
+      primaryLink,
+      linksJson,
+      primaryText,
       body.fileName || '',
       body.fileSize || '',
       body.fileType || '',
@@ -504,6 +532,36 @@ router.put('/works/:id', async (req, res) => {
     const body = req.body;
     const galleryImages = typeof body.galleryImages === 'string' ? body.galleryImages : JSON.stringify(body.galleryImages || body.galleryList || []);
 
+    // Get existing work to protect files and data (NEVER LOSE FILES!)
+    const [existingRows] = await pool.query('SELECT * FROM works WHERE id = ?', [id]);
+    const existing = existingRows[0] || {};
+
+    let links = Array.isArray(body.links) ? body.links.filter(l => l && (l.url || l.link)) : [];
+    if (links.length === 0 && body.link && body.link !== '#' && !body.link.startsWith('data:')) {
+      links = [{ title: body.downloadText || 'ลิงก์ผลงาน', url: body.link }];
+    } else if (links.length === 0 && existing.links_json) {
+      try {
+        const parsed = JSON.parse(existing.links_json);
+        if (Array.isArray(parsed) && parsed.length > 0) links = parsed;
+      } catch {}
+    }
+    const linksJson = JSON.stringify(links);
+    const primaryLink = links.length > 0 ? (links[0].url || links[0].link) : (body.link || existing.link || '#');
+    const primaryText = links.length > 0 ? (links[0].title || 'ดูรายละเอียด') : (body.downloadText || existing.download_text || 'ดูรายละเอียด');
+
+    // Protect existing files: do not overwrite with empty unless explicitly removed
+    const fileName = body.fileName !== undefined ? body.fileName : (existing.file_name || '');
+    const fileSize = body.fileSize !== undefined ? body.fileSize : (existing.file_size || '');
+    const fileType = body.fileType !== undefined ? body.fileType : (existing.file_type || '');
+    let fileData = body.fileData || body.file_data;
+    if (!fileData) {
+      if (fileName && fileName === existing.file_name) {
+        fileData = existing.file_data || '';
+      } else {
+        fileData = '';
+      }
+    }
+
     const updateSql = `
       UPDATE works SET
         course_id = ?,
@@ -516,6 +574,7 @@ router.put('/works/:id', async (req, res) => {
         gallery_images = ?,
         description = ?,
         link = ?,
+        links_json = ?,
         download_text = ?,
         file_name = ?,
         file_size = ?,
@@ -527,22 +586,23 @@ router.put('/works/:id', async (req, res) => {
     `;
 
     await pool.query(updateSql, [
-      body.courseId || '',
-      body.title || '',
-      body.category || 'student',
-      body.categoryLabel || 'ผลงานนักเรียน',
-      body.date || '',
-      body.studentName || '',
-      body.image || '',
+      body.courseId !== undefined ? body.courseId : (existing.course_id || ''),
+      body.title !== undefined ? body.title : (existing.title || ''),
+      body.category || existing.category || 'student',
+      body.categoryLabel || existing.category_label || 'ผลงานนักเรียน',
+      body.date !== undefined ? body.date : (existing.date || ''),
+      body.studentName !== undefined ? body.studentName : (existing.student_name || ''),
+      body.image !== undefined ? body.image : (existing.image || ''),
       galleryImages,
-      body.description || '',
-      body.link || '#',
-      body.downloadText || 'ดูรายละเอียด',
-      body.fileName || '',
-      body.fileSize || '',
-      body.fileType || '',
-      body.fileData || body.file_data || '',
-      body.tags || '',
+      body.description !== undefined ? body.description : (existing.description || ''),
+      primaryLink,
+      linksJson,
+      primaryText,
+      fileName,
+      fileSize,
+      fileType,
+      fileData,
+      body.tags !== undefined ? body.tags : (existing.tags || ''),
       id
     ]);
 

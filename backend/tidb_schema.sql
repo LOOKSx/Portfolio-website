@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS `works` (
     `image` LONGTEXT,
     `description` TEXT,
     `link` VARCHAR(512),
+    `links_json` LONGTEXT,
     `download_text` VARCHAR(128),
     `tags` VARCHAR(255),
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,

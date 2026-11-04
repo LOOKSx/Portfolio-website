@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl, SafeHtml } from '@angular/platform-browser';
 import { PortfolioService } from './services/portfolio.service';
-import { Teacher, Course, Work, DownloadItem, EducationItem, StatItem } from './models/portfolio.models';
+import { Teacher, Course, Work, WorkLinkItem, DownloadItem, EducationItem, StatItem } from './models/portfolio.models';
 
 @Component({
   selector: 'app-root',
@@ -50,6 +50,7 @@ export class AppComponent implements OnInit {
 
   // Form Models
   workForm: Partial<Work> = {};
+  workLinks: WorkLinkItem[] = [];
   courseForm: Partial<Course> = {};
   teacherForm: Partial<Teacher> = {};
   downloadForm: Partial<DownloadItem> = {};
@@ -379,6 +380,7 @@ export class AppComponent implements OnInit {
       fileData: '',
       tags: '31901-2009, ปวส.2, สทส2'
     };
+    this.workLinks = [{ title: '', url: '' }];
     this.workGalleryImages = [];
     this.newInsideImageUrl = '';
     this.showWorkModal = true;
@@ -392,6 +394,13 @@ export class AppComponent implements OnInit {
         this.workForm.fileData = this.workForm.link;
       }
       this.workForm.link = '';
+    }
+    if (work.links && work.links.length > 0) {
+      this.workLinks = work.links.map(l => ({ ...l }));
+    } else if (work.link && work.link !== '#' && !work.link.startsWith('data:')) {
+      this.workLinks = [{ title: work.downloadText || 'ลิงก์ผลงาน', url: work.link }];
+    } else {
+      this.workLinks = [{ title: '', url: '' }];
     }
     this.workGalleryImages = work.galleryList ? [...work.galleryList] : [];
     this.newInsideImageUrl = '';
@@ -494,6 +503,23 @@ export class AppComponent implements OnInit {
       this.showToastNotification(`❌ เกิดข้อผิดพลาดในการ${actionName}`);
     };
 
+    // Process multiple links
+    const validLinks: WorkLinkItem[] = (this.workLinks || [])
+      .filter(l => l && l.url && l.url.trim().length > 0)
+      .map(l => ({
+        title: (l.title && l.title.trim()) || (this.isCanvaLink(l.url) ? '🎨 เปิดดูสไลด์ / ผลงานบน Canva' : 'ดูรายละเอียด'),
+        url: l.url.trim()
+      }));
+
+    this.workForm.links = validLinks;
+    this.workForm.linksJson = JSON.stringify(validLinks);
+    if (validLinks.length > 0) {
+      this.workForm.link = validLinks[0].url;
+      this.workForm.downloadText = validLinks[0].title;
+    } else if (!this.workForm.link || this.workForm.link.startsWith('data:')) {
+      this.workForm.link = '#';
+    }
+
     if (this.workForm.id) {
       const workId = this.workForm.id;
       this.portfolio.updateWork(workId, this.workForm as Work).subscribe({
@@ -531,8 +557,10 @@ export class AppComponent implements OnInit {
         galleryImages: JSON.stringify(this.workGalleryImages),
         galleryList: [...this.workGalleryImages],
         description: this.workForm.description || '',
-        link: this.workForm.link || '',
-        downloadText: this.workForm.downloadText || (this.isCanvaLink(this.workForm.link) ? '🎨 เปิดดูสไลด์ / ผลงานบน Canva' : (this.workForm.fileName ? `ดาวน์โหลด ${this.workForm.fileName}` : 'ดูรายละเอียด')),
+        link: this.workForm.link || (validLinks.length > 0 ? validLinks[0].url : '#'),
+        links: validLinks,
+        linksJson: JSON.stringify(validLinks),
+        downloadText: this.workForm.downloadText || (validLinks.length > 0 ? validLinks[0].title : (this.workForm.fileName ? `ดาวน์โหลด ${this.workForm.fileName}` : 'ดูรายละเอียด')),
         fileName: this.workForm.fileName || '',
         fileSize: this.workForm.fileSize || '',
         fileType: this.workForm.fileType || '',
@@ -1166,6 +1194,88 @@ export class AppComponent implements OnInit {
       this.workForm.description = mdLink;
     }
     this.showToastNotification('🔗 แทรกข้อความพร้อมลิงก์เรียบร้อย');
+  }
+
+
+  // --- Multiple Links Management Helpers ---
+  addWorkLink(title: string = '', url: string = ''): void {
+    if (!this.workLinks) this.workLinks = [];
+    this.workLinks.push({ title, url });
+  }
+
+  removeWorkLink(index: number): void {
+    if (this.workLinks && index >= 0 && index < this.workLinks.length) {
+      this.workLinks.splice(index, 1);
+    }
+  }
+
+  onWorkLinkItemChange(item: WorkLinkItem): void {
+    if (item && item.url && this.isCanvaLink(item.url)) {
+      if (!item.title || item.title === 'ดูรายละเอียด' || item.title.includes('ลิงก์ผลงาน')) {
+        item.title = '🎨 สไลด์นำเสนอ Canva';
+      }
+    }
+  }
+
+  setQuickCanvaLinkForIndex(index: number): void {
+    const sample = prompt('กรุณาวางลิงก์ผลงาน Canva ของคุณที่นี่ (เช่น https://www.canva.com/design/...):', 'https://www.canva.com/design/');
+    if (sample && sample.trim()) {
+      if (this.workLinks && index >= 0 && index < this.workLinks.length) {
+        this.workLinks[index].url = sample.trim();
+        if (!this.workLinks[index].title || this.workLinks[index].title.includes('ลิงก์')) {
+          this.workLinks[index].title = '🎨 สไลด์นำเสนอ Canva';
+        }
+      } else {
+        this.addWorkLink('🎨 สไลด์นำเสนอ Canva', sample.trim());
+      }
+    }
+  }
+
+  hasCanvaLink(work?: Work | null): boolean {
+    if (!work) return false;
+    if (work.link && this.isCanvaLink(work.link)) return true;
+    if (work.links && work.links.some(l => this.isCanvaLink(l.url))) return true;
+    return false;
+  }
+
+  getWorkFirstCanvaLink(work?: Work | null): string {
+    if (!work) return '';
+    if (work.links) {
+      const found = work.links.find(l => this.isCanvaLink(l.url));
+      if (found) return found.url;
+    }
+    if (work.link && this.isCanvaLink(work.link)) return work.link;
+    return '';
+  }
+
+  getLinkIcon(url?: string): string {
+    if (!url) return '🔗';
+    const lower = url.toLowerCase();
+    if (lower.includes('canva.com') || lower.includes('canva.link')) return '🎨';
+    if (lower.includes('drive.google.com')) return '📁';
+    if (lower.includes('github.com')) return '💻';
+    if (lower.includes('youtube.com') || lower.includes('youtu.be')) return '▶️';
+    if (lower.includes('sites.google.com')) return '🌐';
+    if (lower.includes('docs.google.com')) return '📄';
+    return '🔗';
+  }
+
+  getLinkBadgeClass(url?: string): string {
+    if (!url) return 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/25';
+    const lower = url.toLowerCase();
+    if (lower.includes('canva.com') || lower.includes('canva.link')) {
+      return 'bg-gradient-to-r from-blue-500/15 via-purple-500/15 to-pink-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30';
+    }
+    if (lower.includes('drive.google.com')) {
+      return 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/25';
+    }
+    if (lower.includes('github.com')) {
+      return 'bg-zinc-500/15 text-zinc-700 dark:text-zinc-300 border-zinc-500/25';
+    }
+    if (lower.includes('youtube.com') || lower.includes('youtu.be')) {
+      return 'bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/25';
+    }
+    return 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/25';
   }
 
   // --- Canva Embed & Integration Helpers ---

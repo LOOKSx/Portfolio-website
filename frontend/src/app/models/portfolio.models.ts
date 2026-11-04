@@ -49,6 +49,11 @@ export interface Course {
   updatedAt?: string;
 }
 
+export interface WorkLinkItem {
+  title: string;
+  url: string;
+}
+
 export interface Work {
   id: string;
   courseId: string;
@@ -62,6 +67,8 @@ export interface Work {
   galleryList?: string[]; // รายการภาพข้างใน (Array of URLs/Base64)
   description: string;
   link: string;
+  links?: WorkLinkItem[];
+  linksJson?: string;
   downloadText: string;
   fileName?: string;
   fileSize?: string;

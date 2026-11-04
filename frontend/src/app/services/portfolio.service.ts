@@ -102,6 +102,10 @@ export class PortfolioService {
       description: 'จากภาพคำสั่ง ใบงานหน่วยที่ 1 ให้นักศึกษาสร้างชิ้นงานใน Canva พร้อมยกตัวอย่างพร้อมภาพประกอบ มีรายละเอียดหัวข้อที่ต้องทำดังนี้ครับ:\n1. ฮาร์ดแวร์ (Hardware) 3 ข้อ อธิบายรายละเอียด\n2. ซอฟต์แวร์ (Software) 3 ข้อ อธิบายรายละเอียด\n3. บุคลากร (People ware) 3 ข้อ อธิบายรายละเอียด\n4. ข้อมูลและสารสนเทศ (Data / Information) 3 ข้อ\n5. กระบวนการทำงาน (Procedure) 1 ข้อ อธิบายรายละเอียด\n6. AppSheet คืออะไร',
       link: 'https://canva.link/xlm8w7ekzohdxur',
       downloadText: 'ดาวน์โหลด องค์ประกอบระบบสารสนเทศและ AppSheet.pdf (5.94 MB)',
+      links: [
+        { title: '🎨 สไลด์นำเสนอ Canva', url: 'https://canva.link/xlm8w7ekzohdxur' }
+      ],
+      linksJson: JSON.stringify([{ title: '🎨 สไลด์นำเสนอ Canva', url: 'https://canva.link/xlm8w7ekzohdxur' }]),
       fileName: 'องค์ประกอบระบบสารสนเทศและ AppSheet.pdf',
       fileSize: '5.94 MB',
       fileType: 'application/pdf',
@@ -117,8 +121,12 @@ export class PortfolioService {
       studentName: 'นาย พุศิพงศ์ ราชรักษ์ ปวส.2 2สทส1 เลขที่ 11 กลุ่ม 1',
       image: 'https://images.unsplash.com/photo-1551650975-87deedd944c3?q=80&w=800&auto=format&fit=crop',
       description: 'การใช้งาน AppSheet\n(ให้นักศึกษานำการใช้งาน AppSheet ข้อ 1-10 ใส่ใน G-site ของแต่ละคน )\n\n[1-วิธีคิดออกแบบในการสร้างแอพของคุณด้วย-AppSheet](https://drive.google.com/file/d/1LNqFp_DLIl9ZJYeAm8BRNv1WK8QiTIsX/view?usp=drive_link)\n\n[2-สร้างฐานข้อมูลใน-Google-Sheet](https://drive.google.com/file/d/13q1NLXN-83-1m3xiz5R-ekpSynDILllj/view?usp=drive_link)\n\n[3-เริ่มสร้างแอพพลิเคชั่นใน-appsheet](https://drive.google.com/file/d/1_y3VQGcgP_dMeX52_lnthwx1ldXb6aEv/view?usp=drive_link)\n\n[4-เมนูและเครื่องมือต่าง-ๆ-ใน-AppSheet](https://drive.google.com/file/d/1uh4yIoASexDgglO7C3BA8bG432ASbLBr/view?usp=drive_link)\n\n[5-การตั้งค่าชนิดข้อมูลเบื้องต้น](https://drive.google.com/file/d/16o5onZHiiGnRhYSScGJqrHFFBNcDsecr/view?usp=drive_link)\n\n[6-การตั้งค่าชนิดข้อมูลแบบละเอียด-NumberEnumEnumList](https://drive.google.com/file/d/15sxQer38ci7by8OytW6v8xRpBGU2JMEn/view?usp=drive_link)\n\n[7-การทดสอบบันทึกข้อมูลจาก-AppSheet-1](https://drive.google.com/file/d/1EdqugXlhaezRp_VQwuqSiS2oUBTV6t42/view?usp=drive_link)\n\n[8-การเพิ่มคอลัมน์ในภายหลังและตั้งค่า-imageLatLong](https://drive.google.com/file/d/1ohKXY3gJbu3FwptdUtSxCL5-rDZL58bX/view?usp=drive_link)\n\n[9-การตัั้งค่า-View-Desk](https://drive.google.com/file/d/16jbMM40_W_a4_mK4Is4H2QM6P0qb1lZ9/view?usp=drive_link)\n\n[10-การตัั้งค่า-View-Detail](https://drive.google.com/file/d/1e0VFRhzheEANzm8iqjatgzK3uoTXZupB/view?usp=drive_link)',
-      link: '#',
+      link: 'https://drive.google.com/file/d/1LNqFp_DLIl9ZJYeAm8BRNv1WK8QiTIsX/view?usp=drive_link',
       downloadText: 'ดูรายละเอียด',
+      links: [
+        { title: '📁 Google Drive AppSheet ข้อ 1', url: 'https://drive.google.com/file/d/1LNqFp_DLIl9ZJYeAm8BRNv1WK8QiTIsX/view?usp=drive_link' }
+      ],
+      linksJson: JSON.stringify([{ title: '📁 Google Drive AppSheet ข้อ 1', url: 'https://drive.google.com/file/d/1LNqFp_DLIl9ZJYeAm8BRNv1WK8QiTIsX/view?usp=drive_link' }]),
       fileName: '',
       fileSize: '',
       fileType: '',
@@ -426,6 +434,10 @@ export class PortfolioService {
     );
   }
 
+  public isCanvaLink(url?: string): boolean {
+    return !!url && (url.toLowerCase().includes('canva.com') || url.toLowerCase().includes('canva.link'));
+  }
+
   private enrichWork(w: Work): Work {
     // Parse tags: support both JSON array ["tag1","tag2"] and comma-separated "tag1, tag2"
     if (w.tags) {
@@ -456,6 +468,31 @@ export class PortfolioService {
       }
     } else {
       w.galleryList = [];
+    }
+
+    // Parse links (support multiple links, linksJson string, or single link fallback)
+    if (w.linksJson) {
+      try {
+        const parsed = typeof w.linksJson === 'string' ? JSON.parse(w.linksJson) : w.linksJson;
+        if (Array.isArray(parsed)) {
+          w.links = parsed.filter((item: any) => item && (item.url || item.link)).map((item: any) => ({
+            title: item.title || 'ลิงก์ผลงาน',
+            url: item.url || item.link
+          }));
+        }
+      } catch (e) {
+        w.links = [];
+      }
+    }
+    if (!w.links || w.links.length === 0) {
+      if (w.link && w.link !== '#' && !w.link.startsWith('data:')) {
+        w.links = [{
+          title: w.downloadText || (this.isCanvaLink(w.link) ? '🎨 เปิดดูสไลด์ / ผลงานบน Canva' : 'ดูรายละเอียด'),
+          url: w.link
+        }];
+      } else {
+        w.links = [];
+      }
     }
 
     return w;
