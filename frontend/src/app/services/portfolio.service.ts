@@ -100,12 +100,12 @@ export class PortfolioService {
       studentName: 'นาย พุศิพงศ์ ราชรักษ์ ปวส.2 1สทส2 เลขที่ 11 กลุ่ม 1',
       image: 'https://images.unsplash.com/photo-1551650975-87deedd944c3?q=80&w=800&auto=format&fit=crop',
       description: 'จากภาพคำสั่ง ใบงานหน่วยที่ 1 ให้นักศึกษาสร้างชิ้นงานใน Canva พร้อมยกตัวอย่างพร้อมภาพประกอบ มีรายละเอียดหัวข้อที่ต้องทำดังนี้ครับ:\n1. ฮาร์ดแวร์ (Hardware) 3 ข้อ อธิบายรายละเอียด\n2. ซอฟต์แวร์ (Software) 3 ข้อ อธิบายรายละเอียด\n3. บุคลากร (People ware) 3 ข้อ อธิบายรายละเอียด\n4. ข้อมูลและสารสนเทศ (Data / Information) 3 ข้อ\n5. กระบวนการทำงาน (Procedure) 1 ข้อ อธิบายรายละเอียด\n6. AppSheet คืออะไร',
-      link: 'https://canva.link/xlm8w7ekzohdxur',
+      link: 'https://www.canva.com/design/DAHZFyIQ2zI/5I15iPM3JbrIFkwPsh2W8Q/view?utm_content=DAHZFyIQ2zI&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton',
       downloadText: 'ดาวน์โหลด องค์ประกอบระบบสารสนเทศและ AppSheet.pdf (5.94 MB)',
       links: [
-        { title: '🎨 สไลด์นำเสนอ Canva', url: 'https://canva.link/xlm8w7ekzohdxur' }
+        { title: '🎨 สไลด์นำเสนอ Canva (องค์ประกอบระบบสารสนเทศและ AppSheet)', url: 'https://www.canva.com/design/DAHZFyIQ2zI/5I15iPM3JbrIFkwPsh2W8Q/view?utm_content=DAHZFyIQ2zI&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton' }
       ],
-      linksJson: JSON.stringify([{ title: '🎨 สไลด์นำเสนอ Canva', url: 'https://canva.link/xlm8w7ekzohdxur' }]),
+      linksJson: JSON.stringify([{ title: '🎨 สไลด์นำเสนอ Canva (องค์ประกอบระบบสารสนเทศและ AppSheet)', url: 'https://www.canva.com/design/DAHZFyIQ2zI/5I15iPM3JbrIFkwPsh2W8Q/view?utm_content=DAHZFyIQ2zI&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton' }]),
       fileName: 'องค์ประกอบระบบสารสนเทศและ AppSheet.pdf',
       fileSize: '5.94 MB',
       fileType: 'application/pdf',

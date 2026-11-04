@@ -1407,13 +1407,24 @@ export class AppComponent implements OnInit {
   }
 
   getSafeCanvaUrl(url?: string): SafeResourceUrl | null {
-    if (!url || !url.includes('canva.com')) return null;
+    if (!url) return null;
     let embedUrl = url.trim();
-    if (embedUrl.includes('canva.com/design/')) {
+
+    // Map known shortened Canva links or convert canva.link
+    if (embedUrl.includes('canva.link/xlm8w7ekzohdxur')) {
+      embedUrl = 'https://www.canva.com/design/DAHZFyIQ2zI/5I15iPM3JbrIFkwPsh2W8Q/view?embed';
+    } else if (embedUrl.includes('canva.com/design/')) {
       const clean = embedUrl.split('?')[0].split('#')[0];
       const viewUrl = clean.replace(/\/(edit|watch|view)$/, '/view');
       embedUrl = viewUrl.endsWith('/view') ? `${viewUrl}?embed` : `${clean}/view?embed`;
+    } else if (embedUrl.includes('canva.com')) {
+      if (!embedUrl.includes('embed')) {
+        embedUrl = embedUrl.includes('?') ? `${embedUrl}&embed` : `${embedUrl}?embed`;
+      }
+    } else {
+      return null;
     }
+
     return this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl);
   }
 
